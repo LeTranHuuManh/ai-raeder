@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "239107880733",
+    "project_id": "ai-book-reader-bca96",
+    "storage_bucket": "ai-book-reader-bca96.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:239107880733:android:b45b7a29abd1533d6693f4",
+        "android_client_info": {
+          "package_name": "com.lthmanh.ai_book_reader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "239107880733-rc06us8ilf00vdv7c8gq4mqkagbgvrt4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBX03Dzmiod4XYjXxlNF_teIfk6FMJi3g0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "239107880733-rc06us8ilf00vdv7c8gq4mqkagbgvrt4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
