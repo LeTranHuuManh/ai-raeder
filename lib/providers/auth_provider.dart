@@ -1,29 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/models/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  FirebaseAuth? _auth;
+  FirebaseFirestore? _firestore;
+  GoogleSignIn? _googleSignIn;
 
   UserModel? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isFirebaseAvailable = false;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _currentUser != null;
+  bool get isFirebaseAvailable => _isFirebaseAvailable;
 
   AuthProvider() {
-    _initAuthListener();
+    _initializeFirebase();
+  }
+
+  void _initializeFirebase() {
+    // Use a microtask to ensure Firebase is initialized first
+    // This is called after main() completes Firebase initialization
+    Future.microtask(() {
+      try {
+        // Check if Firebase is initialized
+        try {
+          Firebase.app(); // This will throw if not initialized
+          // Firebase is initialized, proceed with setup
+          _auth = FirebaseAuth.instance;
+          _firestore = FirebaseFirestore.instance;
+          _isFirebaseAvailable = true;
+          _errorMessage = null; // Clear any error
+          _initAuthListener();
+          debugPrint('✅ Firebase initialized successfully in AuthProvider');
+          notifyListeners();
+        } catch (e) {
+          // Firebase not initialized
+          debugPrint('Firebase not initialized in AuthProvider: $e');
+          _isFirebaseAvailable = false;
+          _errorMessage = 'Firebase chưa được cấu hình. Vui lòng kiểm tra cấu hình Firebase.';
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint('Firebase error in AuthProvider: $e');
+        _isFirebaseAvailable = false;
+        _errorMessage = 'Firebase chưa được cấu hình. Vui lòng kiểm tra cấu hình Firebase.';
+        notifyListeners();
+      }
+    });
+    
+    // Initialize GoogleSignIn lazily (only when needed)
+    // This avoids errors if Google Sign In is not configured
+    // GoogleSignIn will be initialized in signInWithGoogle() if needed
+  }
+  
+  Future<void> _ensureGoogleSignIn() async {
+    if (_googleSignIn != null) return;
+    
+    try {
+      // Initialize GoogleSignIn - this may throw if clientId is not set on web
+      _googleSignIn = GoogleSignIn();
+    } catch (e) {
+      debugPrint('GoogleSignIn initialization failed (likely missing clientId): $e');
+      _googleSignIn = null;
+      // Will show error message when user tries to use it
+    }
   }
 
   void _initAuthListener() {
-    _auth.authStateChanges().listen((User? firebaseUser) async {
+    if (_auth == null) return;
+    _auth!.authStateChanges().listen((User? firebaseUser) async {
       if (firebaseUser != null) {
         await _loadUserData(firebaseUser.uid);
       } else {
@@ -34,8 +87,9 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _loadUserData(String uid) async {
+    if (_firestore == null) return;
     try {
-      final doc = await _firestore.collection('users').doc(uid).get();
+      final doc = await _firestore!.collection('users').doc(uid).get();
       if (doc.exists) {
         _currentUser = UserModel.fromMap(doc.data()!);
         notifyListeners();
@@ -47,12 +101,18 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> signInWithEmail(String email, String password) async {
+    if (_auth == null || _firestore == null) {
+      _errorMessage = 'Firebase chưa được cấu hình';
+      notifyListeners();
+      return false;
+    }
+    
     try {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
 
-      final userCredential = await _auth.signInWithEmailAndPassword(
+      final userCredential = await _auth!.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -68,6 +128,11 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = _getErrorMessage(e.code);
       notifyListeners();
       return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Lỗi đăng nhập: ${e.toString()}';
+      notifyListeners();
+      return false;
     }
   }
 
@@ -76,12 +141,18 @@ class AuthProvider extends ChangeNotifier {
     String password,
     String displayName,
   ) async {
+    if (_auth == null || _firestore == null) {
+      _errorMessage = 'Firebase chưa được cấu hình';
+      notifyListeners();
+      return false;
+    }
+    
     try {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
 
-      final userCredential = await _auth.createUserWithEmailAndPassword(
+      final userCredential = await _auth!.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -96,7 +167,7 @@ class AuthProvider extends ChangeNotifier {
         lastLoginAt: DateTime.now(),
       );
 
-      await _firestore.collection('users').doc(newUser.id).set(newUser.toMap());
+      await _firestore!.collection('users').doc(newUser.id).set(newUser.toMap());
       _currentUser = newUser;
 
       _isLoading = false;
@@ -107,16 +178,36 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = _getErrorMessage(e.code);
       notifyListeners();
       return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Lỗi đăng ký: ${e.toString()}';
+      notifyListeners();
+      return false;
     }
   }
 
   Future<bool> signInWithGoogle() async {
+    if (_auth == null || _firestore == null) {
+      _errorMessage = 'Firebase chưa được cấu hình';
+      notifyListeners();
+      return false;
+    }
+    
+    // Initialize GoogleSignIn if not already done
+    await _ensureGoogleSignIn();
+    
+    if (_googleSignIn == null) {
+      _errorMessage = 'Google Sign In chưa được cấu hình. Vui lòng thêm Google Client ID vào web/index.html';
+      notifyListeners();
+      return false;
+    }
+    
     try {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
 
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
       if (googleUser == null) {
         _isLoading = false;
         notifyListeners();
@@ -131,16 +222,16 @@ class AuthProvider extends ChangeNotifier {
         idToken: googleAuth.idToken,
       );
 
-      final userCredential = await _auth.signInWithCredential(credential);
+      final userCredential = await _auth!.signInWithCredential(credential);
 
-      final userDoc = await _firestore
+      final userDoc = await _firestore!
           .collection('users')
           .doc(userCredential.user!.uid)
           .get();
 
       if (!userDoc.exists) {
         final newUser = UserModel.fromFirebaseUser(userCredential.user!);
-        await _firestore
+        await _firestore!
             .collection('users')
             .doc(newUser.id)
             .set(newUser.toMap());
@@ -162,24 +253,39 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
-    await _googleSignIn.signOut();
+    if (_auth != null) {
+      await _auth!.signOut();
+    }
+    if (_googleSignIn != null) {
+      await _googleSignIn!.signOut();
+    }
     _currentUser = null;
     notifyListeners();
   }
 
   Future<void> _updateLastLogin(String uid) async {
-    await _firestore.collection('users').doc(uid).update({
-      'lastLoginAt': FieldValue.serverTimestamp(),
-    });
+    if (_firestore == null) return;
+    try {
+      await _firestore!.collection('users').doc(uid).update({
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Error updating last login: $e');
+    }
   }
 
   Future<bool> resetPassword(String email) async {
+    if (_auth == null) {
+      _errorMessage = 'Firebase chưa được cấu hình';
+      notifyListeners();
+      return false;
+    }
+    
     try {
       _isLoading = true;
       notifyListeners();
 
-      await _auth.sendPasswordResetEmail(email: email);
+      await _auth!.sendPasswordResetEmail(email: email);
 
       _isLoading = false;
       notifyListeners();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../data/models/book_model.dart';
 
 class BookCard extends StatelessWidget {
@@ -12,10 +13,12 @@ class BookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap:
-          onTap ??
+      onTap: onTap ??
           () {
-            // TODO: Navigate to book detail
+            Navigator.of(context).pushNamed(
+              AppRoutes.bookDetail,
+              arguments: book.id,
+            );
           },
       child: Container(
         decoration: BoxDecoration(

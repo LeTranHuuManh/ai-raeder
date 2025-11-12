@@ -1,3 +1,3 @@
-# manhle
+# AI Reader
 
-A new Flutter project.
+A Flutter application for reading books with AI features.

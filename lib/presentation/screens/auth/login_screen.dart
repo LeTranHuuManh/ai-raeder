@@ -236,13 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Google Sign In
                 OutlinedButton.icon(
                   onPressed: _handleGoogleSignIn,
-                  icon: Image.asset(
-                    'assets/icons/google.png',
-                    height: 24,
-                    width: 24,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.g_mobiledata, size: 24),
-                  ),
+                  icon: const Icon(Icons.g_mobiledata, size: 24),
                   label: const Text('Đăng nhập với Google'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

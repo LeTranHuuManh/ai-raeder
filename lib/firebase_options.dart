@@ -34,37 +34,83 @@ class DefaultFirebaseOptions {
   }
 
   static final FirebaseOptions web = FirebaseOptions(
-    apiKey: ApiConfig.get('API_KEY_WEB'),
-    appId: ApiConfig.get('APP_ID_WEB'),
-    messagingSenderId: ApiConfig.get('MESSAGING_SENDER_ID'),
-    projectId: ApiConfig.get('PROJECT_ID'),
-    authDomain: ApiConfig.get('AUTH_DOMAIN'),
-    storageBucket: ApiConfig.get('STORAGE_BUCKET'),
+    apiKey: ApiConfig.get('API_KEY_WEB').isEmpty
+        ? 'demo-api-key'
+        : ApiConfig.get('API_KEY_WEB'),
+    appId: ApiConfig.get('APP_ID_WEB').isEmpty
+        ? '1:demo:web:demo'
+        : ApiConfig.get('APP_ID_WEB'),
+    messagingSenderId: ApiConfig.get('MESSAGING_SENDER_ID').isEmpty
+        ? '123456789'
+        : ApiConfig.get('MESSAGING_SENDER_ID'),
+    projectId: ApiConfig.get('PROJECT_ID').isEmpty
+        ? 'demo-project'
+        : ApiConfig.get('PROJECT_ID'),
+    authDomain: ApiConfig.get('AUTH_DOMAIN').isEmpty
+        ? 'demo-project.firebaseapp.com'
+        : ApiConfig.get('AUTH_DOMAIN'),
+    storageBucket: ApiConfig.get('STORAGE_BUCKET').isEmpty
+        ? 'demo-project.appspot.com'
+        : ApiConfig.get('STORAGE_BUCKET'),
   );
 
   static final FirebaseOptions android = FirebaseOptions(
-    apiKey: ApiConfig.get('API_KEY_ANDROID'),
-    appId: ApiConfig.get('APP_ID_ANDROID'),
-    messagingSenderId: ApiConfig.get('MESSAGING_SENDER_ID'),
-    projectId: ApiConfig.get('PROJECT_ID'),
-    storageBucket: ApiConfig.get('STORAGE_BUCKET'),
+    apiKey: ApiConfig.get('API_KEY_ANDROID').isEmpty
+        ? 'demo-api-key'
+        : ApiConfig.get('API_KEY_ANDROID'),
+    appId: ApiConfig.get('APP_ID_ANDROID').isEmpty
+        ? '1:demo:android:demo'
+        : ApiConfig.get('APP_ID_ANDROID'),
+    messagingSenderId: ApiConfig.get('MESSAGING_SENDER_ID').isEmpty
+        ? '123456789'
+        : ApiConfig.get('MESSAGING_SENDER_ID'),
+    projectId: ApiConfig.get('PROJECT_ID').isEmpty
+        ? 'demo-project'
+        : ApiConfig.get('PROJECT_ID'),
+    storageBucket: ApiConfig.get('STORAGE_BUCKET').isEmpty
+        ? 'demo-project.appspot.com'
+        : ApiConfig.get('STORAGE_BUCKET'),
   );
 
   static final FirebaseOptions ios = FirebaseOptions(
-    apiKey: ApiConfig.get('API_KEY_IOS'),
-    appId: ApiConfig.get('APP_ID_IOS'),
-    messagingSenderId: ApiConfig.get('MESSAGING_SENDER_ID'),
-    projectId: ApiConfig.get('PROJECT_ID'),
-    storageBucket: ApiConfig.get('STORAGE_BUCKET'),
-    iosBundleId: ApiConfig.get('IOS_BUNDLE_ID'),
+    apiKey: ApiConfig.get('API_KEY_IOS').isEmpty
+        ? 'demo-api-key'
+        : ApiConfig.get('API_KEY_IOS'),
+    appId: ApiConfig.get('APP_ID_IOS').isEmpty
+        ? '1:demo:ios:demo'
+        : ApiConfig.get('APP_ID_IOS'),
+    messagingSenderId: ApiConfig.get('MESSAGING_SENDER_ID').isEmpty
+        ? '123456789'
+        : ApiConfig.get('MESSAGING_SENDER_ID'),
+    projectId: ApiConfig.get('PROJECT_ID').isEmpty
+        ? 'demo-project'
+        : ApiConfig.get('PROJECT_ID'),
+    storageBucket: ApiConfig.get('STORAGE_BUCKET').isEmpty
+        ? 'demo-project.appspot.com'
+        : ApiConfig.get('STORAGE_BUCKET'),
+    iosBundleId: ApiConfig.get('IOS_BUNDLE_ID').isEmpty
+        ? 'com.example.ai_reader'
+        : ApiConfig.get('IOS_BUNDLE_ID'),
   );
 
   static final FirebaseOptions macos = FirebaseOptions(
-    apiKey: ApiConfig.get('API_KEY_IOS'),
-    appId: ApiConfig.get('APP_ID_IOS'),
-    messagingSenderId: ApiConfig.get('MESSAGING_SENDER_ID'),
-    projectId: ApiConfig.get('PROJECT_ID'),
-    storageBucket: ApiConfig.get('STORAGE_BUCKET'),
-    iosBundleId: ApiConfig.get('IOS_BUNDLE_ID'),
+    apiKey: ApiConfig.get('API_KEY_IOS').isEmpty
+        ? 'demo-api-key'
+        : ApiConfig.get('API_KEY_IOS'),
+    appId: ApiConfig.get('APP_ID_IOS').isEmpty
+        ? '1:demo:ios:demo'
+        : ApiConfig.get('APP_ID_IOS'),
+    messagingSenderId: ApiConfig.get('MESSAGING_SENDER_ID').isEmpty
+        ? '123456789'
+        : ApiConfig.get('MESSAGING_SENDER_ID'),
+    projectId: ApiConfig.get('PROJECT_ID').isEmpty
+        ? 'demo-project'
+        : ApiConfig.get('PROJECT_ID'),
+    storageBucket: ApiConfig.get('STORAGE_BUCKET').isEmpty
+        ? 'demo-project.appspot.com'
+        : ApiConfig.get('STORAGE_BUCKET'),
+    iosBundleId: ApiConfig.get('IOS_BUNDLE_ID').isEmpty
+        ? 'com.example.ai_reader'
+        : ApiConfig.get('IOS_BUNDLE_ID'),
   );
 }

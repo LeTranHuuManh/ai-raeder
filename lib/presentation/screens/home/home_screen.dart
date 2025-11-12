@@ -52,6 +52,15 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.of(context).pushNamed(AppRoutes.search);
             },
           ),
+          // Temporary: Direct access to admin for first-time setup
+          // Remove this in production
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings),
+            tooltip: 'Admin (tạm thời)',
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.adminDashboard);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {

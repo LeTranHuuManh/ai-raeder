@@ -1,6 +1,6 @@
 {
-    "name": "manhle",
-    "short_name": "manhle",
+    "name": "AI Reader",
+    "short_name": "AI Reader",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
