@@ -12,6 +12,7 @@ import 'providers/auth_provider.dart';
 import 'providers/book_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/reading_provider.dart';
+import 'providers/category_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -106,6 +107,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => BookProvider()),
         ChangeNotifierProvider(create: (_) => ReadingProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
       ],
       child: const MyApp(),
     ),

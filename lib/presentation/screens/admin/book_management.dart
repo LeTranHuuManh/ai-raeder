@@ -1,6 +1,6 @@
-
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
@@ -248,6 +248,10 @@ class _BookEditDialogState extends State<_BookEditDialog> {
   String? _fileUrl;
   bool _isUploading = false;
 
+  // Store selected files instead of uploading immediately
+  PlatformFile? _selectedCoverImage;
+  PlatformFile? _selectedBookFile;
+
   @override
   void initState() {
     super.initState();
@@ -278,37 +282,67 @@ class _BookEditDialogState extends State<_BookEditDialog> {
   }
 
   Future<void> _pickCoverImage() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: kIsWeb, // Important for web: load file bytes
+    );
 
     if (result != null && result.files.single.path != null) {
-      await _uploadImage(result.files.single.path!);
+      setState(() {
+        _selectedCoverImage = result.files.single;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã chọn ảnh: ${result.files.single.name}')),
+        );
+      }
     }
   }
 
   Future<void> _pickBookFile() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      withData: kIsWeb, // Important for web: load file bytes
+    );
 
     if (result != null && result.files.single.path != null) {
-      await _uploadFile(result.files.single.path!);
+      setState(() {
+        _selectedBookFile = result.files.single;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã chọn file: ${result.files.single.name}')),
+        );
+      }
     }
   }
 
-  Future<void> _uploadImage(String path) async {
-    setState(() {
-      _isUploading = true;
-    });
-
+  Future<String> _uploadImage(PlatformFile platformFile) async {
     try {
-      final file = File(path);
-      if (!await file.exists()) {
-        throw Exception('File không tồn tại');
+      // Validate file existence
+      if (kIsWeb) {
+        if (platformFile.bytes == null) {
+          throw Exception('Không thể đọc dữ liệu file');
+        }
+      } else {
+        if (platformFile.path == null) {
+          throw Exception('Không tìm thấy đường dẫn file');
+        }
+        final file = File(platformFile.path!);
+        if (!await file.exists()) {
+          throw Exception('File không tồn tại');
+        }
       }
 
       debugPrint('Uploading image to Cloudinary...');
 
       final cloudinaryService = CloudinaryService();
       final url = await cloudinaryService.uploadImage(
-        file,
+        file: kIsWeb ? null : File(platformFile.path!),
+        bytes: kIsWeb ? platformFile.bytes : null,
+        fileName: platformFile.name,
         folder: 'book_covers',
       );
 
@@ -316,188 +350,98 @@ class _BookEditDialogState extends State<_BookEditDialog> {
         throw Exception('Không nhận được URL từ Cloudinary');
       }
 
-      setState(() {
-        _coverImageUrl = url;
-        _isUploading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Upload ảnh thành công')));
-      }
+      return url;
     } catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
-
-      String errorMessage = 'Lỗi upload ảnh: ${e.toString()}';
-      String detailMessage = '';
-
-      if (e.toString().contains('Cloudinary chưa được cấu hình')) {
-        errorMessage = 'Cloudinary chưa được cấu hình.';
-        detailMessage = '''
-Hướng dẫn khắc phục:
-1. Vào Cloudinary Console: https://console.cloudinary.com
-2. Đăng nhập hoặc tạo tài khoản
-3. Lấy thông tin từ Dashboard:
-   - Cloud Name
-   - API Key
-   - API Secret
-4. Thêm vào file .env:
-   CLOUDINARY_CLOUD_NAME=your_cloud_name
-   CLOUDINARY_API_KEY=your_api_key
-   CLOUDINARY_API_SECRET=your_api_secret
-5. Restart ứng dụng
-        ''';
-      }
-
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Lỗi Upload'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(errorMessage),
-                  if (detailMessage.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Chi tiết:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(detailMessage, style: const TextStyle(fontSize: 12)),
-                  ],
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Đóng'),
-              ),
-            ],
-          ),
-        );
-      }
+      throw Exception('Lỗi upload ảnh: ${e.toString()}');
     }
   }
 
-  Future<void> _uploadFile(String path) async {
-    setState(() {
-      _isUploading = true;
-    });
-
+  Future<String> _uploadFile(PlatformFile platformFile) async {
     try {
-      final file = File(path);
-      if (!await file.exists()) {
-        throw Exception('File không tồn tại');
+      // Validate file existence
+      if (kIsWeb) {
+        if (platformFile.bytes == null) {
+          throw Exception('Không thể đọc dữ liệu file');
+        }
+      } else {
+        if (platformFile.path == null) {
+          throw Exception('Không tìm thấy đường dẫn file');
+        }
+        final file = File(platformFile.path!);
+        if (!await file.exists()) {
+          throw Exception('File không tồn tại');
+        }
       }
 
       debugPrint('Uploading file to Cloudinary...');
 
       final cloudinaryService = CloudinaryService();
       final url = await cloudinaryService.uploadImage(
-        file,
+        file: kIsWeb ? null : File(platformFile.path!),
+        bytes: kIsWeb ? platformFile.bytes : null,
+        fileName: platformFile.name,
         folder: 'books',
+        resourceType:
+            'auto', // Use 'auto' to let Cloudinary detect and allow public access
       );
 
       if (url == null) {
         throw Exception('Không nhận được URL từ Cloudinary');
       }
 
-      setState(() {
-        _fileUrl = url;
-        _isUploading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Upload file thành công')));
-      }
+      return url;
     } catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
-
-      String errorMessage = 'Lỗi upload file: ${e.toString()}';
-      String detailMessage = '';
-
-      if (e.toString().contains('Cloudinary chưa được cấu hình')) {
-        errorMessage = 'Cloudinary chưa được cấu hình.';
-        detailMessage = '''
-Hướng dẫn khắc phục:
-1. Vào Cloudinary Console: https://console.cloudinary.com
-2. Đăng nhập hoặc tạo tài khoản
-3. Lấy thông tin từ Dashboard:
-   - Cloud Name
-   - API Key
-   - API Secret
-4. Thêm vào file .env:
-   CLOUDINARY_CLOUD_NAME=your_cloud_name
-   CLOUDINARY_API_KEY=your_api_key
-   CLOUDINARY_API_SECRET=your_api_secret
-5. Restart ứng dụng
-        ''';
-      }
-
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Lỗi Upload'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(errorMessage),
-                  if (detailMessage.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Chi tiết:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(detailMessage, style: const TextStyle(fontSize: 12)),
-                  ],
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Đóng'),
-              ),
-            ],
-          ),
-        );
-      }
+      throw Exception('Lỗi upload file: ${e.toString()}');
     }
   }
 
   Future<void> _saveBook() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_coverImageUrl == null || _fileUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn ảnh bìa và file sách')),
-      );
-      return;
+
+    // Check if files are selected (for new book) or URLs exist (for existing book)
+    final isEditingExistingBook = widget.book != null;
+    final hasExistingCoverImage =
+        _coverImageUrl != null && _coverImageUrl!.isNotEmpty;
+    final hasExistingBookFile = _fileUrl != null && _fileUrl!.isNotEmpty;
+
+    if (!isEditingExistingBook ||
+        (!hasExistingCoverImage || !hasExistingBookFile)) {
+      if (_selectedCoverImage == null || _selectedBookFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng chọn ảnh bìa và file sách')),
+        );
+        return;
+      }
     }
 
+    setState(() {
+      _isUploading = true;
+    });
+
     try {
+      // Upload files to Cloudinary if new files are selected
+      String finalCoverImageUrl = _coverImageUrl ?? '';
+      String finalFileUrl = _fileUrl ?? '';
+
+      if (_selectedCoverImage != null) {
+        debugPrint('Uploading cover image...');
+        finalCoverImageUrl = await _uploadImage(_selectedCoverImage!);
+        debugPrint('Cover image uploaded: $finalCoverImageUrl');
+      }
+
+      if (_selectedBookFile != null) {
+        debugPrint('Uploading book file...');
+        finalFileUrl = await _uploadFile(_selectedBookFile!);
+        debugPrint('Book file uploaded: $finalFileUrl');
+      }
+
       final bookData = {
         'title': _titleController.text.trim(),
         'author': _authorController.text.trim(),
         'description': _descriptionController.text.trim(),
         'category': _categoryController.text.trim(),
-        'coverImageUrl': _coverImageUrl,
-        'fileUrl': _fileUrl,
+        'coverImageUrl': finalCoverImageUrl,
+        'fileUrl': finalFileUrl,
         'format': _selectedFormat.name,
         'pageCount': int.tryParse(_pageCountController.text) ?? 0,
         'isFree': _isFree,
@@ -521,6 +465,10 @@ Hướng dẫn khắc phục:
         await FirebaseFirestore.instance.collection('books').add(bookData);
       }
 
+      setState(() {
+        _isUploading = false;
+      });
+
       if (mounted) {
         Navigator.pop(context);
         widget.onSaved();
@@ -535,6 +483,10 @@ Hướng dẫn khắc phục:
         );
       }
     } catch (e) {
+      setState(() {
+        _isUploading = false;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -680,9 +632,13 @@ Hướng dẫn khắc phục:
                         onPressed: _isUploading ? null : _pickCoverImage,
                         icon: const Icon(Icons.image),
                         label: Text(
-                          _coverImageUrl != null
-                              ? 'Đã chọn ảnh'
-                              : 'Chọn ảnh bìa',
+                          _selectedCoverImage != null
+                              ? 'Ảnh: ${_selectedCoverImage!.name}'
+                              : (_coverImageUrl != null
+                                    ? 'Đã có ảnh'
+                                    : 'Chọn ảnh bìa'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -692,7 +648,13 @@ Hướng dẫn khắc phục:
                         onPressed: _isUploading ? null : _pickBookFile,
                         icon: const Icon(Icons.file_upload),
                         label: Text(
-                          _fileUrl != null ? 'Đã chọn file' : 'Chọn file sách',
+                          _selectedBookFile != null
+                              ? 'File: ${_selectedBookFile!.name}'
+                              : (_fileUrl != null
+                                    ? 'Đã có file'
+                                    : 'Chọn file sách'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -701,7 +663,13 @@ Hướng dẫn khắc phục:
                 if (_isUploading)
                   const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Column(
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 8),
+                        Text('Đang upload file lên Cloudinary...'),
+                      ],
+                    ),
                   ),
                 const SizedBox(height: 16),
                 Row(
