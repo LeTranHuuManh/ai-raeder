@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/admin_guard.dart';
 import '../../../data/models/user_model.dart';
 import '../../widgets/loading_widget.dart';
 
@@ -33,10 +34,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       final snapshot = await _firestore.collection('users').get();
       setState(() {
         _users = snapshot.docs
-            .map((doc) => UserModel.fromMap({
-                  'id': doc.id,
-                  ...doc.data(),
-                }))
+            .map((doc) => UserModel.fromMap({'id': doc.id, ...doc.data()}))
             .toList();
         _isLoading = false;
       });
@@ -56,20 +54,40 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(user.isAdmin ? 'Xóa quyền admin' : 'Cấp quyền admin'),
+        title: Text(
+          user.isAdmin ? 'Xóa quyền admin' : 'Cấp quyền admin',
+          style: const TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         content: Text(
           user.isAdmin
               ? 'Bạn có chắc muốn xóa quyền admin của "${user.displayName}"?'
               : 'Bạn có chắc muốn cấp quyền admin cho "${user.displayName}"?',
+          style: const TextStyle(fontFamily: 'Roboto', fontSize: 15),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xác nhận'),
+            child: const Text(
+              'Xác nhận',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -94,9 +112,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi: ${e.toString()}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Lỗi: ${e.toString()}')));
         }
       }
     }
@@ -106,20 +124,41 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
+        title: const Text(
+          'Xác nhận xóa',
+          style: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         content: Text(
           'Bạn có chắc muốn xóa người dùng "${user.displayName}"?\n\n'
           'Hành động này không thể hoàn tác.',
+          style: const TextStyle(fontFamily: 'Roboto', fontSize: 15),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Xóa'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text(
+              'Xóa',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
       ),
@@ -148,7 +187,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(user.displayName),
+        title: Text(
+          user.displayName,
+          style: const TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -166,10 +212,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   'Đăng nhập lần cuối',
                   user.lastLoginAt!.toString().split(' ')[0],
                 ),
-              _buildDetailRow(
-                'Quyền admin',
-                user.isAdmin ? 'Có' : 'Không',
-              ),
+              _buildDetailRow('Quyền admin', user.isAdmin ? 'Có' : 'Không'),
               _buildDetailRow(
                 'Sách yêu thích',
                 '${user.favoriteBooks.length} cuốn',
@@ -180,7 +223,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng'),
+            child: const Text(
+              'Đóng',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),
@@ -189,18 +238,31 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 140,
             child: Text(
               '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -209,57 +271,115 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   List<UserModel> get _filteredUsers {
     if (_searchQuery.isEmpty) return _users;
     return _users.where((user) {
-      return user.displayName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      return user.displayName.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
           user.email.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quản lý người dùng'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadUsers,
+    return AdminGuard(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Quản lý người dùng',
+            style: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.w600),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Tìm kiếm người dùng...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _loadUsers,
+              tooltip: 'Làm mới',
             ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? const LoadingWidget()
-                : _filteredUsers.isEmpty
-                    ? const Center(child: Text('Không có người dùng nào'))
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _filteredUsers.length,
-                        itemBuilder: (context, index) {
-                          final user = _filteredUsers[index];
-                          return _buildUserItem(user);
-                        },
+          ],
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                style: const TextStyle(fontFamily: 'Roboto', fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm người dùng...',
+                  hintStyle: const TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 15,
+                  ),
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.people, size: 20, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Tổng số: ${_users.length} người dùng',
+                    style: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _isLoading
+                  ? const LoadingWidget()
+                  : _filteredUsers.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.person_off,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _searchQuery.isEmpty
+                                ? 'Chưa có người dùng nào'
+                                : 'Không tìm thấy người dùng',
+                            style: TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
-          ),
-        ],
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = _filteredUsers[index];
+                        return _buildUserItem(user);
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -267,6 +387,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   Widget _buildUserItem(UserModel user) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
@@ -277,7 +399,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           child: user.photoUrl == null
               ? Text(
                   user.displayName[0].toUpperCase(),
-                  style: const TextStyle(fontSize: 20),
+                  style: const TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
                 )
               : null,
         ),
@@ -288,6 +414,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 user.displayName,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
+                style: const TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             if (user.isAdmin) ...[
@@ -301,9 +432,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 child: const Text(
                   'ADMIN',
                   style: TextStyle(
+                    fontFamily: 'Roboto',
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -314,12 +447,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            const SizedBox(height: 4),
             Text(
               user.email,
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
+              style: const TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -330,6 +469,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     '${user.favoriteBooks.length} sách yêu thích',
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
+                    style: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -343,34 +487,30 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               icon: const Icon(Icons.info_outline, size: 20),
               iconSize: 20,
               padding: const EdgeInsets.all(4),
-              constraints: const BoxConstraints(
-                minWidth: 32,
-                minHeight: 32,
-              ),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              tooltip: 'Xem chi tiết',
               onPressed: () => _showUserDetails(user),
             ),
             IconButton(
               icon: Icon(
                 user.isAdmin ? Icons.admin_panel_settings : Icons.person,
                 size: 20,
-                color: user.isAdmin ? AppColors.primary : AppColors.textSecondary,
+                color: user.isAdmin
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
               ),
               iconSize: 20,
               padding: const EdgeInsets.all(4),
-              constraints: const BoxConstraints(
-                minWidth: 32,
-                minHeight: 32,
-              ),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              tooltip: user.isAdmin ? 'Xóa quyền admin' : 'Cấp quyền admin',
               onPressed: () => _toggleAdminStatus(user),
             ),
             IconButton(
               icon: const Icon(Icons.delete, color: AppColors.error, size: 20),
               iconSize: 20,
               padding: const EdgeInsets.all(4),
-              constraints: const BoxConstraints(
-                minWidth: 32,
-                minHeight: 32,
-              ),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              tooltip: 'Xóa người dùng',
               onPressed: () => _deleteUser(user),
             ),
           ],
@@ -381,4 +521,3 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     );
   }
 }
-
