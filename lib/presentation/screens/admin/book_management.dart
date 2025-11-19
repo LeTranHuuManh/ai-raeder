@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/book_model.dart';
+import '../../../data/services/cloudinary_service.dart';
 import '../../../providers/book_provider.dart';
 import '../../widgets/loading_widget.dart';
 
@@ -300,39 +299,22 @@ class _BookEditDialogState extends State<_BookEditDialog> {
     });
 
     try {
-      // Check Firebase Storage configuration
-      final storage = FirebaseStorage.instance;
-      final app = Firebase.app();
-      final storageBucket = app.options.storageBucket;
-
-      if (storageBucket == null || storageBucket.isEmpty) {
-        throw Exception(
-          'Storage bucket chưa được cấu hình trong Firebase Options',
-        );
-      }
-
-      debugPrint('Using Storage bucket: $storageBucket');
-
       final file = File(path);
       if (!await file.exists()) {
         throw Exception('File không tồn tại');
       }
 
-      final ref = storage
-          .ref()
-          .child('book_covers')
-          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+      debugPrint('Uploading image to Cloudinary...');
 
-      final uploadTask = ref.putFile(file);
+      final cloudinaryService = CloudinaryService();
+      final url = await cloudinaryService.uploadImage(
+        file,
+        folder: 'book_covers',
+      );
 
-      // Monitor upload progress
-      uploadTask.snapshotEvents.listen((snapshot) {
-        final progress = snapshot.bytesTransferred / snapshot.totalBytes;
-        debugPrint('Upload progress: ${(progress * 100).toStringAsFixed(1)}%');
-      });
-
-      await uploadTask;
-      final url = await ref.getDownloadURL();
+      if (url == null) {
+        throw Exception('Không nhận được URL từ Cloudinary');
+      }
 
       setState(() {
         _coverImageUrl = url;
@@ -344,51 +326,30 @@ class _BookEditDialogState extends State<_BookEditDialog> {
           context,
         ).showSnackBar(const SnackBar(content: Text('Upload ảnh thành công')));
       }
-    } on FirebaseException catch (e) {
+    } catch (e) {
       setState(() {
         _isUploading = false;
       });
 
-      String errorMessage = 'Lỗi upload ảnh: ';
+      String errorMessage = 'Lỗi upload ảnh: ${e.toString()}';
       String detailMessage = '';
 
-      if (e.code == 'object-not-found' ||
-          e.code == 'not-found' ||
-          e.code == '-13010' ||
-          e.message?.contains('404') == true) {
-        errorMessage =
-            'Firebase Storage bucket chưa được tạo hoặc chưa được cấu hình đúng.';
+      if (e.toString().contains('Cloudinary chưa được cấu hình')) {
+        errorMessage = 'Cloudinary chưa được cấu hình.';
         detailMessage = '''
 Hướng dẫn khắc phục:
-1. Vào Firebase Console: https://console.firebase.google.com
-2. Chọn project của bạn
-3. Vào mục "Storage" (bên trái)
-4. Nhấn "Get started" để tạo Storage bucket
-5. Chọn chế độ "Production mode" hoặc "Test mode"
-6. Chọn location cho bucket
-7. Kiểm tra Storage bucket name trong file .env (STORAGE_BUCKET)
-8. Đảm bảo Storage bucket name đúng format: project-id.appspot.com
+1. Vào Cloudinary Console: https://console.cloudinary.com
+2. Đăng nhập hoặc tạo tài khoản
+3. Lấy thông tin từ Dashboard:
+   - Cloud Name
+   - API Key
+   - API Secret
+4. Thêm vào file .env:
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+5. Restart ứng dụng
         ''';
-      } else if (e.code == 'unauthorized' || e.code == 'permission-denied') {
-        errorMessage = 'Không có quyền upload file.';
-        detailMessage = '''
-Hướng dẫn khắc phục:
-1. Vào Firebase Console → Storage → Rules
-2. Cập nhật rules để cho phép upload:
-   
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       match /{allPaths=**} {
-         allow read, write: if request.auth != null;
-       }
-     }
-   }
-3. Nhấn "Publish" để lưu rules
-        ''';
-      } else {
-        errorMessage += e.message ?? e.toString();
-        detailMessage = 'Error code: ${e.code}';
       }
 
       if (mounted) {
@@ -420,18 +381,6 @@ Hướng dẫn khắc phục:
                 child: const Text('Đóng'),
               ),
             ],
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi upload ảnh: ${e.toString()}'),
-            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -444,41 +393,22 @@ Hướng dẫn khắc phục:
     });
 
     try {
-      // Check Firebase Storage configuration
-      final storage = FirebaseStorage.instance;
-      final app = Firebase.app();
-      final storageBucket = app.options.storageBucket;
-
-      if (storageBucket == null || storageBucket.isEmpty) {
-        throw Exception(
-          'Storage bucket chưa được cấu hình trong Firebase Options',
-        );
-      }
-
-      debugPrint('Using Storage bucket: $storageBucket');
-
       final file = File(path);
       if (!await file.exists()) {
         throw Exception('File không tồn tại');
       }
 
-      // Get file extension from path
-      final extension = path.split('.').last;
-      final ref = storage
-          .ref()
-          .child('books')
-          .child('${DateTime.now().millisecondsSinceEpoch}.$extension');
+      debugPrint('Uploading file to Cloudinary...');
 
-      final uploadTask = ref.putFile(file);
+      final cloudinaryService = CloudinaryService();
+      final url = await cloudinaryService.uploadImage(
+        file,
+        folder: 'books',
+      );
 
-      // Monitor upload progress
-      uploadTask.snapshotEvents.listen((snapshot) {
-        final progress = snapshot.bytesTransferred / snapshot.totalBytes;
-        debugPrint('Upload progress: ${(progress * 100).toStringAsFixed(1)}%');
-      });
-
-      await uploadTask;
-      final url = await ref.getDownloadURL();
+      if (url == null) {
+        throw Exception('Không nhận được URL từ Cloudinary');
+      }
 
       setState(() {
         _fileUrl = url;
@@ -490,51 +420,30 @@ Hướng dẫn khắc phục:
           context,
         ).showSnackBar(const SnackBar(content: Text('Upload file thành công')));
       }
-    } on FirebaseException catch (e) {
+    } catch (e) {
       setState(() {
         _isUploading = false;
       });
 
-      String errorMessage = 'Lỗi upload file: ';
+      String errorMessage = 'Lỗi upload file: ${e.toString()}';
       String detailMessage = '';
 
-      if (e.code == 'object-not-found' ||
-          e.code == 'not-found' ||
-          e.code == '-13010' ||
-          e.message?.contains('404') == true) {
-        errorMessage =
-            'Firebase Storage bucket chưa được tạo hoặc chưa được cấu hình đúng.';
+      if (e.toString().contains('Cloudinary chưa được cấu hình')) {
+        errorMessage = 'Cloudinary chưa được cấu hình.';
         detailMessage = '''
 Hướng dẫn khắc phục:
-1. Vào Firebase Console: https://console.firebase.google.com
-2. Chọn project của bạn
-3. Vào mục "Storage" (bên trái)
-4. Nhấn "Get started" để tạo Storage bucket
-5. Chọn chế độ "Production mode" hoặc "Test mode"
-6. Chọn location cho bucket
-7. Kiểm tra Storage bucket name trong file .env (STORAGE_BUCKET)
-8. Đảm bảo Storage bucket name đúng format: project-id.appspot.com
+1. Vào Cloudinary Console: https://console.cloudinary.com
+2. Đăng nhập hoặc tạo tài khoản
+3. Lấy thông tin từ Dashboard:
+   - Cloud Name
+   - API Key
+   - API Secret
+4. Thêm vào file .env:
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+5. Restart ứng dụng
         ''';
-      } else if (e.code == 'unauthorized' || e.code == 'permission-denied') {
-        errorMessage = 'Không có quyền upload file.';
-        detailMessage = '''
-Hướng dẫn khắc phục:
-1. Vào Firebase Console → Storage → Rules
-2. Cập nhật rules để cho phép upload:
-   
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       match /{allPaths=**} {
-         allow read, write: if request.auth != null;
-       }
-     }
-   }
-3. Nhấn "Publish" để lưu rules
-        ''';
-      } else {
-        errorMessage += e.message ?? e.toString();
-        detailMessage = 'Error code: ${e.code}';
       }
 
       if (mounted) {
@@ -566,18 +475,6 @@ Hướng dẫn khắc phục:
                 child: const Text('Đóng'),
               ),
             ],
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi upload file: ${e.toString()}'),
-            duration: const Duration(seconds: 5),
           ),
         );
       }
