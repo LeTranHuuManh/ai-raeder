@@ -5,6 +5,9 @@ import '../../../core/constants/app_colors.dart';
 import '../../../providers/auth_provider.dart';
 import '../auth/login_screen.dart';
 import '../admin/admin_dashboard.dart';
+import 'edit_profile_screen.dart';
+import 'notification_settings_screen.dart';
+import 'security_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -408,7 +411,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'Cập nhật thông tin cá nhân',
             color: Colors.purple,
             onTap: () {
-              // Navigate to edit profile
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditProfileScreen(),
+                ),
+              );
             },
           ),
           _buildMenuItem(
@@ -417,7 +425,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'Cài đặt thông báo',
             color: Colors.teal,
             onTap: () {
-              // Navigate to notifications settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationSettingsScreen(),
+                ),
+              );
             },
           ),
           _buildMenuItem(
@@ -426,7 +439,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'Đổi mật khẩu, bảo mật tài khoản',
             color: Colors.indigo,
             onTap: () {
-              // Navigate to security settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SecuritySettingsScreen(),
+                ),
+              );
             },
           ),
           _buildMenuItem(

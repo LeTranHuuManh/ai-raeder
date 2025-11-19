@@ -360,6 +360,58 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Update user profile (display name, phone, photo)
+  Future<bool> updateUserProfile({
+    String? displayName,
+    String? phoneNumber,
+    String? photoUrl,
+  }) async {
+    if (_auth == null || _firestore == null) return false;
+    if (_currentUser == null) return false;
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final uid = _currentUser!.id;
+      final updateData = <String, dynamic>{};
+
+      if (displayName != null) {
+        updateData['displayName'] = displayName;
+        // Also update Firebase Auth profile
+        await _auth!.currentUser?.updateDisplayName(displayName);
+      }
+
+      if (phoneNumber != null) {
+        updateData['phoneNumber'] = phoneNumber;
+      }
+
+      if (photoUrl != null) {
+        updateData['photoUrl'] = photoUrl;
+        // Also update Firebase Auth profile
+        await _auth!.currentUser?.updatePhotoURL(photoUrl);
+      }
+
+      if (updateData.isNotEmpty) {
+        // Update Firestore
+        await _firestore!.collection('users').doc(uid).update(updateData);
+
+        // Reload user data
+        await _loadUserData(uid);
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Lỗi cập nhật hồ sơ: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
   String _getErrorMessage(String code) {
     switch (code) {
       case 'user-not-found':
