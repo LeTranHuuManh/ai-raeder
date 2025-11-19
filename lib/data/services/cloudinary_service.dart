@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class CloudinaryService {
   static final CloudinaryService _instance = CloudinaryService._internal();
@@ -14,25 +15,31 @@ class CloudinaryService {
   String get _cloudName => dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
   String get _apiKey => dotenv.env['CLOUDINARY_API_KEY'] ?? '';
   String get _apiSecret => dotenv.env['CLOUDINARY_API_SECRET'] ?? '';
-  String get _uploadPreset => dotenv.env['CLOUDINARY_UPLOAD_PRESET'] ?? '';
 
-  String get _uploadUrl {
+  String _getUploadUrl(String resourceType) {
     if (_cloudName.isEmpty) {
       throw Exception('CLOUDINARY_CLOUD_NAME chưa được cấu hình');
     }
-    return 'https://api.cloudinary.com/v1_1/$_cloudName/image/upload';
+    // For signed upload, use specific resource type (or auto for auto-detection)
+    return 'https://api.cloudinary.com/v1_1/$_cloudName/$resourceType/upload';
   }
 
   /// Upload image to Cloudinary
   ///
-  /// [file] - The image file to upload
+  /// [file] - The image file to upload (for mobile/desktop)
+  /// [bytes] - The image bytes to upload (for web)
+  /// [fileName] - The file name (required for web)
   /// [folder] - Optional folder path in Cloudinary (e.g., 'book_covers', 'user_avatars')
   /// [publicId] - Optional public ID for the image (if not provided, will be auto-generated)
+  /// [resourceType] - Type of resource: 'image', 'raw', 'video', 'auto'
   /// Returns the secure URL of the uploaded image
-  Future<String?> uploadImage(
-    File file, {
+  Future<String?> uploadImage({
+    File? file,
+    List<int>? bytes,
+    String? fileName,
     String? folder,
     String? publicId,
+    String resourceType = 'auto', // auto-detect file type
   }) async {
     try {
       if (_cloudName.isEmpty) {
@@ -41,8 +48,18 @@ class CloudinaryService {
         );
       }
 
-      if (!await file.exists()) {
-        throw Exception('File không tồn tại');
+      // Validate input
+      if (kIsWeb) {
+        if (bytes == null || fileName == null) {
+          throw Exception('Trên web cần cung cấp bytes và fileName');
+        }
+      } else {
+        if (file == null) {
+          throw Exception('Trên mobile/desktop cần cung cấp file');
+        }
+        if (!await file.exists()) {
+          throw Exception('File không tồn tại');
+        }
       }
 
       // Generate public_id if not provided
@@ -51,27 +68,26 @@ class CloudinaryService {
       final finalPublicId = publicId ?? 'img_$timestamp';
 
       // Prepare form data
-      final formDataMap = <String, dynamic>{
-        'file': await MultipartFile.fromFile(file.path),
-      };
+      final formDataMap = <String, dynamic>{};
 
-      // Option 1: Use unsigned upload with upload preset (simplest, recommended)
-      if (_uploadPreset.isNotEmpty) {
-        formDataMap['upload_preset'] = _uploadPreset;
-        if (folder != null) {
-          formDataMap['folder'] = folder;
-        }
-        if (publicId != null || finalPublicId.isNotEmpty) {
-          formDataMap['public_id'] = finalPublicId;
-        }
+      // Add file based on platform
+      if (kIsWeb) {
+        formDataMap['file'] = MultipartFile.fromBytes(
+          bytes!,
+          filename: fileName,
+        );
+      } else {
+        formDataMap['file'] = await MultipartFile.fromFile(file!.path);
       }
-      // Option 2: Use signed upload with API key and secret
-      else if (_apiKey.isNotEmpty && _apiSecret.isNotEmpty) {
+
+      // Use signed upload with API key and secret (more secure and reliable)
+      if (_apiKey.isNotEmpty && _apiSecret.isNotEmpty) {
         final timestampSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
         // Build parameters for signature (only include non-empty values)
         final signatureParams = <String, String>{
           'timestamp': timestampSeconds.toString(),
+          'type': 'upload', // Explicitly set delivery type to public upload
         };
 
         if (folder != null && folder.isNotEmpty) {
@@ -87,6 +103,7 @@ class CloudinaryService {
         formDataMap['timestamp'] = timestampSeconds;
         formDataMap['api_key'] = _apiKey;
         formDataMap['signature'] = signature;
+        formDataMap['type'] = 'upload'; // Public delivery type
 
         if (folder != null) {
           formDataMap['folder'] = folder;
@@ -95,21 +112,22 @@ class CloudinaryService {
           formDataMap['public_id'] = finalPublicId;
         }
       }
-      // Option 3: Unsigned upload without preset (may require account settings)
+      // Fallback: throw error if no credentials
       else {
-        if (folder != null) {
-          formDataMap['folder'] = folder;
-        }
-        if (finalPublicId.isNotEmpty) {
-          formDataMap['public_id'] = finalPublicId;
-        }
+        throw Exception(
+          'Cloudinary credentials chưa được cấu hình đầy đủ. '
+          'Cần CLOUDINARY_API_KEY và CLOUDINARY_API_SECRET trong file .env',
+        );
       }
 
       final formData = FormData.fromMap(formDataMap);
 
+      // Get the correct upload URL based on resource type
+      final uploadUrl = _getUploadUrl(resourceType);
+
       // Upload to Cloudinary
       final response = await _dio.post(
-        _uploadUrl,
+        uploadUrl,
         data: formData,
         options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
@@ -138,7 +156,7 @@ class CloudinaryService {
     for (var i = 0; i < files.length; i++) {
       try {
         final url = await uploadImage(
-          files[i],
+          file: files[i],
           folder: folder,
           publicId:
               '${folder ?? 'uploads'}/${DateTime.now().millisecondsSinceEpoch}_$i',
