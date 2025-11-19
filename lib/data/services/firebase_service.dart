@@ -1,6 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:io';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
@@ -8,7 +6,6 @@ class FirebaseService {
   FirebaseService._internal();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // Firestore Collections
   CollectionReference get users => _firestore.collection('users');
@@ -16,50 +13,6 @@ class FirebaseService {
   CollectionReference get comments => _firestore.collection('comments');
   CollectionReference get readingHistory =>
       _firestore.collection('readingHistory');
-
-  // Upload file to Firebase Storage
-  Future<String?> uploadFile(File file, String path) async {
-    try {
-      final ref = _storage.ref().child(path);
-      final uploadTask = ref.putFile(file);
-      final snapshot = await uploadTask.whenComplete(() {});
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // Upload multiple files
-  Future<List<String>> uploadMultipleFiles(
-    List<File> files,
-    String basePath,
-  ) async {
-    List<String> urls = [];
-
-    for (var i = 0; i < files.length; i++) {
-      final url = await uploadFile(
-        files[i],
-        '$basePath/${DateTime.now().millisecondsSinceEpoch}_$i',
-      );
-      if (url != null) {
-        urls.add(url);
-      }
-    }
-
-    return urls;
-  }
-
-  // Delete file from Firebase Storage
-  Future<bool> deleteFile(String url) async {
-    try {
-      final ref = _storage.refFromURL(url);
-      await ref.delete();
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
 
   // Batch write operations
   Future<bool> batchWrite(List<Map<String, dynamic>> operations) async {

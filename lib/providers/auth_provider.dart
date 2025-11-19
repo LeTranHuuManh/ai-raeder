@@ -45,30 +45,34 @@ class AuthProvider extends ChangeNotifier {
           // Firebase not initialized
           debugPrint('Firebase not initialized in AuthProvider: $e');
           _isFirebaseAvailable = false;
-          _errorMessage = 'Firebase chưa được cấu hình. Vui lòng kiểm tra cấu hình Firebase.';
+          _errorMessage =
+              'Firebase chưa được cấu hình. Vui lòng kiểm tra cấu hình Firebase.';
           notifyListeners();
         }
       } catch (e) {
         debugPrint('Firebase error in AuthProvider: $e');
         _isFirebaseAvailable = false;
-        _errorMessage = 'Firebase chưa được cấu hình. Vui lòng kiểm tra cấu hình Firebase.';
+        _errorMessage =
+            'Firebase chưa được cấu hình. Vui lòng kiểm tra cấu hình Firebase.';
         notifyListeners();
       }
     });
-    
+
     // Initialize GoogleSignIn lazily (only when needed)
     // This avoids errors if Google Sign In is not configured
     // GoogleSignIn will be initialized in signInWithGoogle() if needed
   }
-  
+
   Future<void> _ensureGoogleSignIn() async {
     if (_googleSignIn != null) return;
-    
+
     try {
       // Initialize GoogleSignIn - this may throw if clientId is not set on web
       _googleSignIn = GoogleSignIn();
     } catch (e) {
-      debugPrint('GoogleSignIn initialization failed (likely missing clientId): $e');
+      debugPrint(
+        'GoogleSignIn initialization failed (likely missing clientId): $e',
+      );
       _googleSignIn = null;
       // Will show error message when user tries to use it
     }
@@ -93,10 +97,35 @@ class AuthProvider extends ChangeNotifier {
       if (doc.exists) {
         _currentUser = UserModel.fromMap(doc.data()!);
         notifyListeners();
+      } else {
+        // User document doesn't exist, create it from Firebase Auth user
+        debugPrint('User document not found, creating from Firebase Auth user');
+        final firebaseUser = _auth?.currentUser;
+        if (firebaseUser != null) {
+          final newUser = UserModel.fromFirebaseUser(firebaseUser);
+          try {
+            await _firestore!.collection('users').doc(uid).set(newUser.toMap());
+            _currentUser = newUser;
+            notifyListeners();
+          } catch (e) {
+            debugPrint('Error creating user document: $e');
+            // Still set current user from Firebase Auth even if Firestore fails
+            _currentUser = newUser;
+            notifyListeners();
+          }
+        }
       }
     } catch (e) {
-      _errorMessage = 'Lỗi tải thông tin người dùng: ${e.toString()}';
-      notifyListeners();
+      debugPrint('Error loading user data: $e');
+      // Try to create user from Firebase Auth as fallback
+      final firebaseUser = _auth?.currentUser;
+      if (firebaseUser != null) {
+        _currentUser = UserModel.fromFirebaseUser(firebaseUser);
+        notifyListeners();
+      } else {
+        _errorMessage = 'Lỗi tải thông tin người dùng: ${e.toString()}';
+        notifyListeners();
+      }
     }
   }
 
@@ -106,7 +135,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    
+
     try {
       _isLoading = true;
       _errorMessage = null;
@@ -117,8 +146,10 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
 
-      await _updateLastLogin(userCredential.user!.uid);
+      // Load user data first (this will create user document if it doesn't exist)
       await _loadUserData(userCredential.user!.uid);
+      // Then update last login
+      await _updateLastLogin(userCredential.user!.uid);
 
       _isLoading = false;
       notifyListeners();
@@ -130,7 +161,18 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = 'Lỗi đăng nhập: ${e.toString()}';
+      // Check if it's a network error
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('network') ||
+          errorString.contains('unreachable') ||
+          errorString.contains('timeout') ||
+          errorString.contains('no address') ||
+          errorString.contains('failed to resolve')) {
+        _errorMessage =
+            'Lỗi kết nối mạng. Vui lòng kiểm tra kết nối Internet và thử lại';
+      } else {
+        _errorMessage = 'Lỗi đăng nhập: ${e.toString()}';
+      }
       notifyListeners();
       return false;
     }
@@ -146,7 +188,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    
+
     try {
       _isLoading = true;
       _errorMessage = null;
@@ -167,7 +209,10 @@ class AuthProvider extends ChangeNotifier {
         lastLoginAt: DateTime.now(),
       );
 
-      await _firestore!.collection('users').doc(newUser.id).set(newUser.toMap());
+      await _firestore!
+          .collection('users')
+          .doc(newUser.id)
+          .set(newUser.toMap());
       _currentUser = newUser;
 
       _isLoading = false;
@@ -192,16 +237,17 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    
+
     // Initialize GoogleSignIn if not already done
     await _ensureGoogleSignIn();
-    
+
     if (_googleSignIn == null) {
-      _errorMessage = 'Google Sign In chưa được cấu hình. Vui lòng thêm Google Client ID vào web/index.html';
+      _errorMessage =
+          'Google Sign In chưa được cấu hình. Vui lòng thêm Google Client ID vào web/index.html';
       notifyListeners();
       return false;
     }
-    
+
     try {
       _isLoading = true;
       _errorMessage = null;
@@ -266,11 +312,27 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _updateLastLogin(String uid) async {
     if (_firestore == null) return;
     try {
-      await _firestore!.collection('users').doc(uid).update({
-        'lastLoginAt': FieldValue.serverTimestamp(),
-      });
+      // Check if user document exists first
+      final userDoc = await _firestore!.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        await _firestore!.collection('users').doc(uid).update({
+          'lastLoginAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // If user document doesn't exist, create it
+        // This can happen if user was created in Firebase Auth but not in Firestore
+        debugPrint(
+          'User document not found, creating new user document for uid: $uid',
+        );
+        final firebaseUser = _auth?.currentUser;
+        if (firebaseUser != null) {
+          final newUser = UserModel.fromFirebaseUser(firebaseUser);
+          await _firestore!.collection('users').doc(uid).set(newUser.toMap());
+        }
+      }
     } catch (e) {
       debugPrint('Error updating last login: $e');
+      // Don't throw error, just log it - login should still succeed
     }
   }
 
@@ -280,7 +342,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    
+
     try {
       _isLoading = true;
       notifyListeners();
@@ -310,8 +372,16 @@ class AuthProvider extends ChangeNotifier {
         return 'Mật khẩu quá yếu';
       case 'invalid-email':
         return 'Email không hợp lệ';
+      case 'network-request-failed':
+      case 'unavailable':
+      case 'deadline-exceeded':
+        return 'Lỗi kết nối mạng. Vui lòng kiểm tra kết nối Internet và thử lại';
+      case 'too-many-requests':
+        return 'Quá nhiều yêu cầu. Vui lòng thử lại sau';
+      case 'operation-not-allowed':
+        return 'Phương thức đăng nhập này chưa được kích hoạt';
       default:
-        return 'Đã xảy ra lỗi';
+        return 'Đã xảy ra lỗi: $code';
     }
   }
 
