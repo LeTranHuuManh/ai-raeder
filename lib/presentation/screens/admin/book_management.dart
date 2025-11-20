@@ -1,14 +1,12 @@
-
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../data/models/book_model.dart';
+import '../../../data/services/cloudinary_service.dart';
 import '../../../providers/book_provider.dart';
 import '../../widgets/loading_widget.dart';
 
@@ -60,17 +58,151 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa sách "${book.title}"?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.all(24),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.warning_rounded,
+                color: Colors.red,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Text(
+                'Xác nhận xóa',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2D3142),
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bạn có chắc muốn xóa sách:',
+              style: TextStyle(color: Colors.grey[600], fontSize: 15),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: CachedNetworkImage(
+                      imageUrl: book.coverImageUrl,
+                      width: 40,
+                      height: 56,
+                      fit: BoxFit.cover,
+                      errorWidget: (context, url, error) => Container(
+                        width: 40,
+                        height: 56,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.book, size: 20),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          book.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Color(0xFF2D3142),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          book.author,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Hành động này không thể hoàn tác!',
+              style: TextStyle(
+                color: Colors.red[400],
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              side: BorderSide(color: Colors.grey[300]!, width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Hủy',
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
           ),
-          TextButton(
+          const SizedBox(width: 8),
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Xóa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.delete_rounded, size: 18),
+                SizedBox(width: 8),
+                Text(
+                  'Xóa',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -82,13 +214,49 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
         await _loadBooks();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã xóa sách thành công')),
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle_rounded, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text(
+                    'Đã xóa sách thành công',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi xóa sách: ${e.toString()}')),
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_rounded, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Lỗi xóa sách: ${e.toString()}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
           );
         }
       }
@@ -113,22 +281,70 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Quản lý sách'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF6C63FF)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Quản lý sách',
+          style: TextStyle(
+            color: Color(0xFF2D3142),
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadBooks),
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6C63FF).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF6C63FF)),
+              onPressed: _loadBooks,
+            ),
+          ),
         ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
+          // Modern search bar
+          Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Tìm kiếm sách...',
-                prefixIcon: const Icon(Icons.search),
+                hintStyle: TextStyle(color: Colors.grey[400]),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFF6C63FF),
+                  size: 24,
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
                 ),
               ),
               onChanged: (value) {
@@ -138,13 +354,53 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
               },
             ),
           ),
+          // Results count
+          if (!_isLoading && _filteredBooks.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  Text(
+                    'Tìm thấy ${_filteredBooks.length} cuốn sách',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: _isLoading
                 ? const LoadingWidget()
                 : _filteredBooks.isEmpty
-                ? const Center(child: Text('Không có sách nào'))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 80,
+                          color: Colors.grey[300],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Không tìm thấy sách nào',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     itemCount: _filteredBooks.length,
                     itemBuilder: (context, index) {
                       final book = _filteredBooks[index];
@@ -154,71 +410,253 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddBookDialog(),
-        child: const Icon(Icons.add),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6C63FF), Color(0xFF5A52D5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6C63FF).withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () => _showAddBookDialog(),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.add_rounded, size: 32),
+        ),
       ),
     );
   }
 
   Widget _buildBookItem(BookModel book) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: CachedNetworkImage(
-            imageUrl: book.coverImageUrl,
-            width: 60,
-            height: 80,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => Container(
-              width: 60,
-              height: 80,
-              color: AppColors.gray200,
-              child: const Icon(Icons.book),
-            ),
-            errorWidget: (context, url, error) => Container(
-              width: 60,
-              height: 80,
-              color: AppColors.gray200,
-              child: const Icon(Icons.book),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => _showAddBookDialog(book: book),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Book cover with shadow
+                Hero(
+                  tag: 'book_${book.id}',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: CachedNetworkImage(
+                        imageUrl: book.coverImageUrl,
+                        width: 70,
+                        height: 100,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          width: 70,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.grey[200]!, Colors.grey[300]!],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.book,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          width: 70,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.grey[300]!, Colors.grey[400]!],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Book info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        book.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3142),
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      // Author
+                      Text(
+                        book.author,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 12),
+                      // Stats row
+                      Row(
+                        children: [
+                          // Rating
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 16,
+                                  color: Colors.amber,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  book.rating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.amber,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          // Views
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6C63FF).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.visibility_rounded,
+                                  size: 16,
+                                  color: Color(0xFF6C63FF),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${book.viewCount}',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF6C63FF),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Action buttons
+                Column(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6C63FF).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.edit_rounded,
+                          color: Color(0xFF6C63FF),
+                          size: 20,
+                        ),
+                        onPressed: () => _showAddBookDialog(book: book),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.delete_rounded,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                        onPressed: () => _deleteBook(book),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
-        title: Text(book.title),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(book.author),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(Icons.star, size: 14, color: Colors.amber),
-                const SizedBox(width: 4),
-                Text('${book.rating.toStringAsFixed(1)}'),
-                const SizedBox(width: 16),
-                Icon(Icons.visibility, size: 14),
-                const SizedBox(width: 4),
-                Text('${book.viewCount}'),
-              ],
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => _showAddBookDialog(book: book),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: AppColors.error),
-              onPressed: () => _deleteBook(book),
-            ),
-          ],
-        ),
-        isThreeLine: true,
       ),
     );
   }
@@ -248,6 +686,10 @@ class _BookEditDialogState extends State<_BookEditDialog> {
   String? _coverImageUrl;
   String? _fileUrl;
   bool _isUploading = false;
+
+  // Store selected files instead of uploading immediately
+  PlatformFile? _selectedCoverImage;
+  PlatformFile? _selectedBookFile;
 
   @override
   void initState() {
@@ -279,328 +721,166 @@ class _BookEditDialogState extends State<_BookEditDialog> {
   }
 
   Future<void> _pickCoverImage() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: kIsWeb, // Important for web: load file bytes
+    );
 
     if (result != null && result.files.single.path != null) {
-      await _uploadImage(result.files.single.path!);
+      setState(() {
+        _selectedCoverImage = result.files.single;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã chọn ảnh: ${result.files.single.name}')),
+        );
+      }
     }
   }
 
   Future<void> _pickBookFile() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      withData: kIsWeb, // Important for web: load file bytes
+    );
 
     if (result != null && result.files.single.path != null) {
-      await _uploadFile(result.files.single.path!);
-    }
-  }
-
-  Future<void> _uploadImage(String path) async {
-    setState(() {
-      _isUploading = true;
-    });
-
-    try {
-      // Check Firebase Storage configuration
-      final storage = FirebaseStorage.instance;
-      final app = Firebase.app();
-      final storageBucket = app.options.storageBucket;
-
-      if (storageBucket == null || storageBucket.isEmpty) {
-        throw Exception(
-          'Storage bucket chưa được cấu hình trong Firebase Options',
-        );
-      }
-
-      debugPrint('Using Storage bucket: $storageBucket');
-
-      final file = File(path);
-      if (!await file.exists()) {
-        throw Exception('File không tồn tại');
-      }
-
-      final ref = storage
-          .ref()
-          .child('book_covers')
-          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
-
-      final uploadTask = ref.putFile(file);
-
-      // Monitor upload progress
-      uploadTask.snapshotEvents.listen((snapshot) {
-        final progress = snapshot.bytesTransferred / snapshot.totalBytes;
-        debugPrint('Upload progress: ${(progress * 100).toStringAsFixed(1)}%');
-      });
-
-      await uploadTask;
-      final url = await ref.getDownloadURL();
-
       setState(() {
-        _coverImageUrl = url;
-        _isUploading = false;
+        _selectedBookFile = result.files.single;
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Upload ảnh thành công')));
-      }
-    } on FirebaseException catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
-
-      String errorMessage = 'Lỗi upload ảnh: ';
-      String detailMessage = '';
-
-      if (e.code == 'object-not-found' ||
-          e.code == 'not-found' ||
-          e.code == '-13010' ||
-          e.message?.contains('404') == true) {
-        errorMessage =
-            'Firebase Storage bucket chưa được tạo hoặc chưa được cấu hình đúng.';
-        detailMessage = '''
-Hướng dẫn khắc phục:
-1. Vào Firebase Console: https://console.firebase.google.com
-2. Chọn project của bạn
-3. Vào mục "Storage" (bên trái)
-4. Nhấn "Get started" để tạo Storage bucket
-5. Chọn chế độ "Production mode" hoặc "Test mode"
-6. Chọn location cho bucket
-7. Kiểm tra Storage bucket name trong file .env (STORAGE_BUCKET)
-8. Đảm bảo Storage bucket name đúng format: project-id.appspot.com
-        ''';
-      } else if (e.code == 'unauthorized' || e.code == 'permission-denied') {
-        errorMessage = 'Không có quyền upload file.';
-        detailMessage = '''
-Hướng dẫn khắc phục:
-1. Vào Firebase Console → Storage → Rules
-2. Cập nhật rules để cho phép upload:
-   
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       match /{allPaths=**} {
-         allow read, write: if request.auth != null;
-       }
-     }
-   }
-3. Nhấn "Publish" để lưu rules
-        ''';
-      } else {
-        errorMessage += e.message ?? e.toString();
-        detailMessage = 'Error code: ${e.code}';
-      }
-
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Lỗi Upload'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(errorMessage),
-                  if (detailMessage.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Chi tiết:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(detailMessage, style: const TextStyle(fontSize: 12)),
-                  ],
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Đóng'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi upload ảnh: ${e.toString()}'),
-            duration: const Duration(seconds: 5),
-          ),
+          SnackBar(content: Text('Đã chọn file: ${result.files.single.name}')),
         );
       }
     }
   }
 
-  Future<void> _uploadFile(String path) async {
-    setState(() {
-      _isUploading = true;
-    });
-
+  Future<String> _uploadImage(PlatformFile platformFile) async {
     try {
-      // Check Firebase Storage configuration
-      final storage = FirebaseStorage.instance;
-      final app = Firebase.app();
-      final storageBucket = app.options.storageBucket;
-
-      if (storageBucket == null || storageBucket.isEmpty) {
-        throw Exception(
-          'Storage bucket chưa được cấu hình trong Firebase Options',
-        );
-      }
-
-      debugPrint('Using Storage bucket: $storageBucket');
-
-      final file = File(path);
-      if (!await file.exists()) {
-        throw Exception('File không tồn tại');
-      }
-
-      // Get file extension from path
-      final extension = path.split('.').last;
-      final ref = storage
-          .ref()
-          .child('books')
-          .child('${DateTime.now().millisecondsSinceEpoch}.$extension');
-
-      final uploadTask = ref.putFile(file);
-
-      // Monitor upload progress
-      uploadTask.snapshotEvents.listen((snapshot) {
-        final progress = snapshot.bytesTransferred / snapshot.totalBytes;
-        debugPrint('Upload progress: ${(progress * 100).toStringAsFixed(1)}%');
-      });
-
-      await uploadTask;
-      final url = await ref.getDownloadURL();
-
-      setState(() {
-        _fileUrl = url;
-        _isUploading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Upload file thành công')));
-      }
-    } on FirebaseException catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
-
-      String errorMessage = 'Lỗi upload file: ';
-      String detailMessage = '';
-
-      if (e.code == 'object-not-found' ||
-          e.code == 'not-found' ||
-          e.code == '-13010' ||
-          e.message?.contains('404') == true) {
-        errorMessage =
-            'Firebase Storage bucket chưa được tạo hoặc chưa được cấu hình đúng.';
-        detailMessage = '''
-Hướng dẫn khắc phục:
-1. Vào Firebase Console: https://console.firebase.google.com
-2. Chọn project của bạn
-3. Vào mục "Storage" (bên trái)
-4. Nhấn "Get started" để tạo Storage bucket
-5. Chọn chế độ "Production mode" hoặc "Test mode"
-6. Chọn location cho bucket
-7. Kiểm tra Storage bucket name trong file .env (STORAGE_BUCKET)
-8. Đảm bảo Storage bucket name đúng format: project-id.appspot.com
-        ''';
-      } else if (e.code == 'unauthorized' || e.code == 'permission-denied') {
-        errorMessage = 'Không có quyền upload file.';
-        detailMessage = '''
-Hướng dẫn khắc phục:
-1. Vào Firebase Console → Storage → Rules
-2. Cập nhật rules để cho phép upload:
-   
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       match /{allPaths=**} {
-         allow read, write: if request.auth != null;
-       }
-     }
-   }
-3. Nhấn "Publish" để lưu rules
-        ''';
+      // Validate file existence
+      if (kIsWeb) {
+        if (platformFile.bytes == null) {
+          throw Exception('Không thể đọc dữ liệu file');
+        }
       } else {
-        errorMessage += e.message ?? e.toString();
-        detailMessage = 'Error code: ${e.code}';
+        if (platformFile.path == null) {
+          throw Exception('Không tìm thấy đường dẫn file');
+        }
+        final file = File(platformFile.path!);
+        if (!await file.exists()) {
+          throw Exception('File không tồn tại');
+        }
       }
 
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Lỗi Upload'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(errorMessage),
-                  if (detailMessage.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Chi tiết:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(detailMessage, style: const TextStyle(fontSize: 12)),
-                  ],
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Đóng'),
-              ),
-            ],
-          ),
-        );
+      debugPrint('Uploading image to Cloudinary...');
+
+      final cloudinaryService = CloudinaryService();
+      final url = await cloudinaryService.uploadImage(
+        file: kIsWeb ? null : File(platformFile.path!),
+        bytes: kIsWeb ? platformFile.bytes : null,
+        fileName: platformFile.name,
+        folder: 'book_covers',
+      );
+
+      if (url == null) {
+        throw Exception('Không nhận được URL từ Cloudinary');
       }
+
+      return url;
     } catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi upload file: ${e.toString()}'),
-            duration: const Duration(seconds: 5),
-          ),
-        );
+      throw Exception('Lỗi upload ảnh: ${e.toString()}');
+    }
+  }
+
+  Future<String> _uploadFile(PlatformFile platformFile) async {
+    try {
+      // Validate file existence
+      if (kIsWeb) {
+        if (platformFile.bytes == null) {
+          throw Exception('Không thể đọc dữ liệu file');
+        }
+      } else {
+        if (platformFile.path == null) {
+          throw Exception('Không tìm thấy đường dẫn file');
+        }
+        final file = File(platformFile.path!);
+        if (!await file.exists()) {
+          throw Exception('File không tồn tại');
+        }
       }
+
+      debugPrint('Uploading file to Cloudinary...');
+
+      final cloudinaryService = CloudinaryService();
+      final url = await cloudinaryService.uploadImage(
+        file: kIsWeb ? null : File(platformFile.path!),
+        bytes: kIsWeb ? platformFile.bytes : null,
+        fileName: platformFile.name,
+        folder: 'books',
+        resourceType:
+            'auto', // Use 'auto' to let Cloudinary detect and allow public access
+      );
+
+      if (url == null) {
+        throw Exception('Không nhận được URL từ Cloudinary');
+      }
+
+      return url;
+    } catch (e) {
+      throw Exception('Lỗi upload file: ${e.toString()}');
     }
   }
 
   Future<void> _saveBook() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_coverImageUrl == null || _fileUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn ảnh bìa và file sách')),
-      );
-      return;
+
+    // Check if files are selected (for new book) or URLs exist (for existing book)
+    final isEditingExistingBook = widget.book != null;
+    final hasExistingCoverImage =
+        _coverImageUrl != null && _coverImageUrl!.isNotEmpty;
+    final hasExistingBookFile = _fileUrl != null && _fileUrl!.isNotEmpty;
+
+    if (!isEditingExistingBook ||
+        (!hasExistingCoverImage || !hasExistingBookFile)) {
+      if (_selectedCoverImage == null || _selectedBookFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng chọn ảnh bìa và file sách')),
+        );
+        return;
+      }
     }
 
+    setState(() {
+      _isUploading = true;
+    });
+
     try {
+      // Upload files to Cloudinary if new files are selected
+      String finalCoverImageUrl = _coverImageUrl ?? '';
+      String finalFileUrl = _fileUrl ?? '';
+
+      if (_selectedCoverImage != null) {
+        debugPrint('Uploading cover image...');
+        finalCoverImageUrl = await _uploadImage(_selectedCoverImage!);
+        debugPrint('Cover image uploaded: $finalCoverImageUrl');
+      }
+
+      if (_selectedBookFile != null) {
+        debugPrint('Uploading book file...');
+        finalFileUrl = await _uploadFile(_selectedBookFile!);
+        debugPrint('Book file uploaded: $finalFileUrl');
+      }
+
       final bookData = {
         'title': _titleController.text.trim(),
         'author': _authorController.text.trim(),
         'description': _descriptionController.text.trim(),
         'category': _categoryController.text.trim(),
-        'coverImageUrl': _coverImageUrl,
-        'fileUrl': _fileUrl,
+        'coverImageUrl': finalCoverImageUrl,
+        'fileUrl': finalFileUrl,
         'format': _selectedFormat.name,
         'pageCount': int.tryParse(_pageCountController.text) ?? 0,
         'isFree': _isFree,
@@ -624,6 +904,10 @@ Hướng dẫn khắc phục:
         await FirebaseFirestore.instance.collection('books').add(bookData);
       }
 
+      setState(() {
+        _isUploading = false;
+      });
+
       if (mounted) {
         Navigator.pop(context);
         widget.onSaved();
@@ -638,6 +922,10 @@ Hướng dẫn khắc phục:
         );
       }
     } catch (e) {
+      setState(() {
+        _isUploading = false;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -649,181 +937,533 @@ Hướng dẫn khắc phục:
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: Colors.transparent,
       child: Container(
-        width: double.maxFinite,
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.book != null ? 'Chỉnh sửa sách' : 'Thêm sách mới',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Tiêu đề',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value?.isEmpty ?? true ? 'Vui lòng nhập tiêu đề' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _authorController,
-                  decoration: const InputDecoration(
-                    labelText: 'Tác giả',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value?.isEmpty ?? true ? 'Vui lòng nhập tác giả' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Mô tả',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                  validator: (value) =>
-                      value?.isEmpty ?? true ? 'Vui lòng nhập mô tả' : null,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _categoryController,
-                        decoration: const InputDecoration(
-                          labelText: 'Thể loại',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) => value?.isEmpty ?? true
-                            ? 'Vui lòng nhập thể loại'
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DropdownButtonFormField<BookFormat>(
-                        value: _selectedFormat,
-                        decoration: const InputDecoration(
-                          labelText: 'Định dạng',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: BookFormat.values.map((format) {
-                          return DropdownMenuItem(
-                            value: format,
-                            child: Text(format.name.toUpperCase()),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedFormat = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
+        constraints: const BoxConstraints(maxWidth: 600),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with gradient
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF6C63FF),
+                    const Color(0xFF6C63FF).withOpacity(0.8),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _pageCountController,
-                        decoration: const InputDecoration(
-                          labelText: 'Số trang',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: CheckboxListTile(
-                        title: const Text('Miễn phí'),
-                        value: _isFree,
-                        onChanged: (value) {
-                          setState(() {
-                            _isFree = value ?? true;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
-                if (!_isFree) ...[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _priceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Giá',
-                      border: OutlineInputBorder(),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    keyboardType: TextInputType.number,
+                    child: Icon(
+                      widget.book != null
+                          ? Icons.edit
+                          : Icons.add_circle_outline,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      widget.book != null ? 'Chỉnh sửa sách' : 'Thêm sách mới',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                 ],
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isUploading ? null : _pickCoverImage,
-                        icon: const Icon(Icons.image),
-                        label: Text(
-                          _coverImageUrl != null
-                              ? 'Đã chọn ảnh'
-                              : 'Chọn ảnh bìa',
-                        ),
+              ),
+            ),
+
+            // Content
+            Flexible(
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Basic Info Section
+                      _buildSectionLabel(
+                        'Thông tin cơ bản',
+                        Icons.info_outline,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isUploading ? null : _pickBookFile,
-                        icon: const Icon(Icons.file_upload),
-                        label: Text(
-                          _fileUrl != null ? 'Đã chọn file' : 'Chọn file sách',
-                        ),
+                      const SizedBox(height: 16),
+
+                      _buildTextField(
+                        controller: _titleController,
+                        label: 'Tiêu đề',
+                        icon: Icons.title,
+                        validator: (value) => value?.isEmpty ?? true
+                            ? 'Vui lòng nhập tiêu đề'
+                            : null,
                       ),
-                    ),
-                  ],
-                ),
-                if (_isUploading)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
+                      const SizedBox(height: 16),
+
+                      _buildTextField(
+                        controller: _authorController,
+                        label: 'Tác giả',
+                        icon: Icons.person_outline,
+                        validator: (value) => value?.isEmpty ?? true
+                            ? 'Vui lòng nhập tác giả'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildTextField(
+                        controller: _descriptionController,
+                        label: 'Mô tả',
+                        icon: Icons.description_outlined,
+                        maxLines: 4,
+                        validator: (value) => value?.isEmpty ?? true
+                            ? 'Vui lòng nhập mô tả'
+                            : null,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Divider
+                      Divider(color: Colors.grey[300], height: 1),
+                      const SizedBox(height: 24),
+
+                      // Category & Format Section
+                      _buildSectionLabel('Phân loại', Icons.category_outlined),
+                      const SizedBox(height: 16),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _categoryController,
+                              label: 'Thể loại',
+                              icon: Icons.local_offer_outlined,
+                              validator: (value) => value?.isEmpty ?? true
+                                  ? 'Vui lòng nhập thể loại'
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Divider
+                      Divider(color: Colors.grey[300], height: 1),
+                      const SizedBox(height: 24),
+
+                      // Details Section
+                      _buildSectionLabel('Chi tiết', Icons.settings_outlined),
+                      const SizedBox(height: 16),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _pageCountController,
+                              label: 'Số trang',
+                              icon: Icons.auto_stories_outlined,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                        ],
+                      ),
+
+                      if (!_isFree) ...[
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _priceController,
+                          label: 'Giá (VNĐ)',
+                          icon: Icons.payments_outlined,
+                          keyboardType: TextInputType.number,
+                        ),
+                      ],
+
+                      const SizedBox(height: 24),
+
+                      // Divider
+                      Divider(color: Colors.grey[300], height: 1),
+                      const SizedBox(height: 24),
+
+                      // Files Section
+                      _buildSectionLabel(
+                        'Tệp đính kèm',
+                        Icons.cloud_upload_outlined,
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildFilePickerButton(
+                        label: 'Chọn ảnh bìa',
+                        icon: Icons.image_outlined,
+                        selectedFile: _selectedCoverImage,
+                        existingUrl: _coverImageUrl,
+                        onTap: _isUploading ? null : _pickCoverImage,
+                        color: const Color(0xFF6C63FF),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      _buildFilePickerButton(
+                        label: 'Chọn file sách',
+                        icon: Icons.picture_as_pdf_outlined,
+                        selectedFile: _selectedBookFile,
+                        existingUrl: _fileUrl,
+                        onTap: _isUploading ? null : _pickBookFile,
+                        color: const Color(0xFFE91E63),
+                      ),
+
+                      if (_isUploading) ...[
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF6C63FF).withOpacity(0.1),
+                                const Color(0xFF6C63FF).withOpacity(0.05),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Column(
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text(
+                                'Đang tải lên...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF6C63FF),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Vui lòng đợi trong giây lát',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Hủy'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _saveBook,
-                      child: const Text('Lưu'),
-                    ),
-                  ],
                 ),
+              ),
+            ),
+
+            // Footer with action buttons
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: Colors.grey[200]!, width: 1),
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    onPressed: _isUploading
+                        ? null
+                        : () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 14,
+                      ),
+                      side: BorderSide(color: Colors.grey[300]!, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.close, size: 18, color: Colors.grey[700]),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Hủy',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: _isUploading ? null : _saveBook,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6C63FF),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 14,
+                      ),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      shadowColor: const Color(0xFF6C63FF).withOpacity(0.3),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.save_outlined, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.book != null ? 'Cập nhật' : 'Lưu',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String label, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF6C63FF),
+                const Color(0xFF6C63FF).withOpacity(0.7),
               ],
             ),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C63FF).withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
+          child: Icon(icon, size: 20, color: Colors.white),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2D3142),
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF6C63FF)),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          labelStyle: TextStyle(color: Colors.grey[600], fontSize: 15),
+          floatingLabelStyle: const TextStyle(
+            color: Color(0xFF6C63FF),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        validator: validator,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF2D3142),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilePickerButton({
+    required String label,
+    required IconData icon,
+    required PlatformFile? selectedFile,
+    required String? existingUrl,
+    required VoidCallback? onTap,
+    required Color color,
+  }) {
+    final hasFile = selectedFile != null || existingUrl != null;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: hasFile ? color.withOpacity(0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasFile ? color : Colors.grey[300]!,
+            width: hasFile ? 2 : 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: hasFile
+                  ? color.withOpacity(0.15)
+                  : Colors.grey.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: hasFile
+                    ? LinearGradient(colors: [color, color.withOpacity(0.7)])
+                    : LinearGradient(
+                        colors: [Colors.grey[200]!, Colors.grey[100]!],
+                      ),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: hasFile
+                    ? [
+                        BoxShadow(
+                          color: color.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                hasFile ? Icons.check_circle : icon,
+                color: hasFile ? Colors.white : Colors.grey[600],
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: hasFile ? color : Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    selectedFile != null
+                        ? selectedFile.name
+                        : (existingUrl != null
+                              ? 'Đã có file'
+                              : 'Chưa chọn file'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: hasFile
+                          ? color.withOpacity(0.8)
+                          : Colors.grey[500],
+                      fontWeight: hasFile ? FontWeight.w500 : FontWeight.normal,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: hasFile ? color : Colors.grey[400],
+            ),
+          ],
         ),
       ),
     );

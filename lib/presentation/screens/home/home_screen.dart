@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/book_provider.dart';
-import '../../widgets/book_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,26 +13,31 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
+  late TabController _tabController;
 
-  final List<String> _categories = [
-    'Tất cả',
-    'Văn học',
-    'Kinh tế',
-    'Tâm lý',
-    'Kỹ năng',
-    'Công nghệ',
+  final List<String> _tabs = [
+    'Popular',
+    'Best Seller',
+    'New Releases',
+    'Poetry',
   ];
-
-  String _selectedCategory = 'Tất cả';
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadBooks();
     });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadBooks() async {
@@ -43,28 +48,52 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Trang chủ'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.black87),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
+        title: const Text(
+          'Trang chủ',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, color: Colors.black87),
             onPressed: () {
               Navigator.of(context).pushNamed(AppRoutes.search);
             },
           ),
-          // Temporary: Direct access to admin for first-time setup
-          // Remove this in production
-          IconButton(
-            icon: const Icon(Icons.admin_panel_settings),
-            tooltip: 'Admin (tạm thời)',
-            onPressed: () {
-              Navigator.of(context).pushNamed(AppRoutes.adminDashboard);
+          // Admin button - only show for admin users
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              final user = authProvider.currentUser;
+              if (user?.isAdmin == true) {
+                return IconButton(
+                  icon: const Icon(
+                    Icons.admin_panel_settings,
+                    color: Colors.black87,
+                  ),
+                  tooltip: 'Quản trị',
+                  onPressed: () {
+                    Navigator.of(context).pushNamed(AppRoutes.adminDashboard);
+                  },
+                );
+              }
+              return const SizedBox.shrink();
             },
           ),
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
+            icon: const Icon(Icons.grid_view, color: Colors.black87),
             onPressed: () {
-              // TODO: Show notifications
+              // TODO: Show grid options
             },
           ),
         ],
@@ -72,151 +101,319 @@ class _HomeScreenState extends State<HomeScreen> {
       drawer: _buildDrawer(),
       body: RefreshIndicator(
         onRefresh: _loadBooks,
-        child: CustomScrollView(
-          slivers: [
-            // Welcome Banner
-            SliverToBoxAdapter(child: _buildWelcomeBanner()),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Welcome Banner
+              _buildQuoteBanner(),
 
-            // Categories
-            SliverToBoxAdapter(child: _buildCategories()),
+              const SizedBox(height: 16),
 
-            // Featured Books
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Nổi bật',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Xem tất cả'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+              // Tabs
+              _buildTabs(),
 
-            // Books Grid
-            Consumer<BookProvider>(
-              builder: (context, bookProvider, child) {
-                if (bookProvider.isLoading) {
-                  return const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
+              const SizedBox(height: 16),
 
-                if (bookProvider.books.isEmpty) {
-                  return const SliverFillRemaining(
-                    child: Center(child: Text('Chưa có sách nào')),
-                  );
-                }
+              // Books Grid
+              _buildBooksGrid(),
 
-                return SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.65,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final book = bookProvider.books[index];
-                      return BookCard(book: book);
-                    }, childCount: bookProvider.books.length),
-                  ),
-                );
-              },
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  Widget _buildWelcomeBanner() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        final user = authProvider.currentUser;
+  Widget _buildQuoteBanner() {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.currentUser;
 
-        return Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
+    String displayName = 'Bạn';
+    if (user != null) {
+      if (user.displayName.isNotEmpty) {
+        displayName = user.displayName;
+      } else {
+        displayName = user.email.split('@').first;
+      }
+    }
+
+    // Get hour of day for greeting
+    final hour = DateTime.now().hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = 'Chào buổi sáng';
+    } else if (hour < 18) {
+      greeting = 'Chào buổi chiều';
+    } else {
+      greeting = 'Chào buổi tối';
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFE8B4F8), Color(0xFF8B7FE8), Color(0xFF6BA8F7)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Xin chào, ${user?.displayName ?? "User"}!',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  greeting,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white70,
+                  ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  displayName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Chào mừng trở lại! Hãy tiếp tục hành trình đọc sách của bạn.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 2,
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Hãy khám phá những cuốn sách thú vị hôm nay',
-                style: TextStyle(fontSize: 14, color: Colors.white70),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Decorative circles
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 15,
+                    left: 15,
+                    child: Container(
+                      width: 25,
+                      height: 25,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  // Main icon
+                  Icon(
+                    Icons.auto_stories_rounded,
+                    size: 70,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ],
               ),
-            ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabs() {
+    return Container(
+      color: Colors.white,
+      child: TabBar(
+        controller: _tabController,
+        isScrollable: true,
+        labelColor: Colors.black87,
+        unselectedLabelColor: Colors.grey,
+        labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.normal,
+        ),
+        indicatorColor: Colors.black87,
+        indicatorWeight: 3,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        tabs: _tabs.map((tab) => Tab(text: tab)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildBooksGrid() {
+    return Consumer<BookProvider>(
+      builder: (context, bookProvider, child) {
+        if (bookProvider.isLoading) {
+          return const SizedBox(
+            height: 400,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (bookProvider.books.isEmpty) {
+          return const SizedBox(
+            height: 400,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.book_outlined, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'Chưa có sách nào',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Filter books based on selected tab
+        List<dynamic> filteredBooks = bookProvider.books;
+
+        // You can add filtering logic here based on tab
+        // For now, showing all books
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.55,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: filteredBooks.length,
+            itemBuilder: (context, index) {
+              final book = filteredBooks[index];
+              return _buildBookItem(book);
+            },
           ),
         );
       },
     );
   }
 
-  Widget _buildCategories() {
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          final isSelected = category == _selectedCategory;
-
-          return Container(
-            margin: const EdgeInsets.only(right: 12),
-            child: ChoiceChip(
-              label: Text(category),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  _selectedCategory = category;
-                });
-                // TODO: Filter books by category
-              },
-              selectedColor: AppColors.primary,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : AppColors.textPrimary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+  Widget _buildBookItem(dynamic book) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.bookDetail, arguments: book.id);
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Book Cover
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: book.coverImageUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: book.coverImageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        placeholder: (context, url) => Container(
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey[200],
+                          child: const Icon(
+                            Icons.book,
+                            size: 40,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.book,
+                          size: 40,
+                          color: Colors.grey,
+                        ),
+                      ),
               ),
             ),
-          );
-        },
+          ),
+          const SizedBox(height: 8),
+          // Book Title
+          Text(
+            book.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Book Author
+          Text(
+            book.author,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+          ),
+        ],
       ),
     );
   }
