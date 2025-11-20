@@ -8,6 +8,8 @@ import '../admin/admin_dashboard.dart';
 import 'edit_profile_screen.dart';
 import 'notification_settings_screen.dart';
 import 'security_settings_screen.dart';
+import 'help_support_screen.dart';
+import 'about_app_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -453,7 +455,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'Câu hỏi thường gặp',
             color: Colors.green,
             onTap: () {
-              // Navigate to help
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HelpSupportScreen(),
+                ),
+              );
             },
           ),
           _buildMenuItem(
@@ -462,8 +469,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'Phiên bản 1.0.0',
             color: Colors.grey,
             onTap: () {
-              // Show about dialog
-              _showAboutDialog(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AboutAppScreen()),
+              );
             },
             showDivider: false,
           ),
@@ -617,75 +626,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.menu_book, color: AppColors.primary, size: 32),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'AI Reader',
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'Ứng dụng đọc sách thông minh',
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 15,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Phiên bản: 1.0.0',
-              style: TextStyle(fontFamily: 'Roboto', fontSize: 14),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '© 2025 AI Reader',
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Đóng',
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

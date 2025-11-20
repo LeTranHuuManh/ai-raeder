@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Quote of the Day Banner
+              // Welcome Banner
               _buildQuoteBanner(),
 
               const SizedBox(height: 16),
@@ -128,6 +128,29 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildQuoteBanner() {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.currentUser;
+
+    String displayName = 'Bạn';
+    if (user != null) {
+      if (user.displayName.isNotEmpty) {
+        displayName = user.displayName;
+      } else {
+        displayName = user.email.split('@').first;
+      }
+    }
+
+    // Get hour of day for greeting
+    final hour = DateTime.now().hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = 'Chào buổi sáng';
+    } else if (hour < 18) {
+      greeting = 'Chào buổi chiều';
+    } else {
+      greeting = 'Chào buổi tối';
+    }
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -153,45 +176,33 @@ class _HomeScreenState extends State<HomeScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Quote Of The Day',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  '"This above all: to thine own self be true."',
-                  style: TextStyle(
+                Text(
+                  greeting,
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: Colors.white,
-                    height: 1.5,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white70,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Text(
-                      'Hamlet - ',
-                      style: TextStyle(fontSize: 12, color: Colors.white70),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        // TODO: Navigate to quote source
-                      },
-                      child: const Text(
-                        'Read Now',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  displayName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Chào mừng trở lại! Hãy tiếp tục hành trình đọc sách của bạn.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                    height: 1.5,
+                  ),
                 ),
               ],
             ),
@@ -199,24 +210,48 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(width: 16),
           Expanded(
             flex: 2,
-            child: Image.asset(
-              'assets/images/reading_illustration.png',
+            child: Container(
               height: 120,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Decorative circles
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.auto_stories,
-                    size: 60,
-                    color: Colors.white70,
+                  Positioned(
+                    bottom: 15,
+                    left: 15,
+                    child: Container(
+                      width: 25,
+                      height: 25,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
-                );
-              },
+                  // Main icon
+                  Icon(
+                    Icons.auto_stories_rounded,
+                    size: 70,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

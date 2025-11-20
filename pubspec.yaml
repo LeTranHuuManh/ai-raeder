@@ -47,17 +47,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Assets
+  # Assets for .env file (required for web)
   assets:
     - assets/.env
-    - assets/images/
-    - assets/images/icons/
-    - assets/data/
-  
-  # Fonts (uncomment if you add custom fonts)
-  # fonts:
-  #   - family: CustomFont
-  #     fonts:
-  #       - asset: assets/fonts/CustomFont-Regular.ttf
-  #       - asset: assets/fonts/CustomFont-Bold.ttf
-  #         weight: 700
