@@ -13,6 +13,7 @@ class AppRoutes {
   static const String adminUsers = '/admin/users';
   static const String adminBooks = '/admin/books';
   static const String adminCategories = '/admin/categories';
+  static const String adminStatistics = '/admin/statistics';
 
   // Private constructor to prevent instantiation
   AppRoutes._();

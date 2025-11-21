@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/book_provider.dart';
+import '../../../data/models/book_model.dart';
+import '../../widgets/book_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -101,26 +102,20 @@ class _HomeScreenState extends State<HomeScreen>
       drawer: _buildDrawer(),
       body: RefreshIndicator(
         onRefresh: _loadBooks,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Banner
-              _buildQuoteBanner(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Welcome Banner
+            _buildQuoteBanner(),
 
-              const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
-              // Tabs
-              _buildTabs(),
+            // Tabs
+            _buildTabs(),
 
-              const SizedBox(height: 16),
-
-              // Books Grid
-              _buildBooksGrid(),
-
-              const SizedBox(height: 24),
-            ],
-          ),
+            // Books Grid with TabBarView
+            Expanded(child: _buildBooksTabView()),
+          ],
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -261,161 +256,162 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildTabs() {
     return Container(
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: TabBar(
         controller: _tabController,
         isScrollable: true,
-        labelColor: Colors.black87,
-        unselectedLabelColor: Colors.grey,
-        labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.textSecondary,
+        labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.normal,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
         ),
-        indicatorColor: Colors.black87,
-        indicatorWeight: 3,
+        indicator: UnderlineTabIndicator(
+          borderSide: BorderSide(color: AppColors.primary, width: 3),
+          insets: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         tabs: _tabs.map((tab) => Tab(text: tab)).toList(),
       ),
     );
   }
 
-  Widget _buildBooksGrid() {
+  Widget _buildBooksTabView() {
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {
         if (bookProvider.isLoading) {
-          return const SizedBox(
-            height: 400,
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (bookProvider.books.isEmpty) {
-          return const SizedBox(
-            height: 400,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.book_outlined, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'Chưa có sách nào',
-                    style: TextStyle(color: Colors.grey),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
-                ],
-              ),
+                  child: const Icon(
+                    Icons.book_outlined,
+                    size: 64,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Chưa có sách nào',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Hãy quay lại sau để xem thêm sách mới',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           );
         }
 
-        // Filter books based on selected tab
-        List<dynamic> filteredBooks = bookProvider.books;
-
-        // You can add filtering logic here based on tab
-        // For now, showing all books
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 0.55,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: filteredBooks.length,
-            itemBuilder: (context, index) {
-              final book = filteredBooks[index];
-              return _buildBookItem(book);
-            },
-          ),
+        return TabBarView(
+          controller: _tabController,
+          children: _tabs.map((tab) {
+            return _buildBooksGrid(bookProvider.books, tab);
+          }).toList(),
         );
       },
     );
   }
 
-  Widget _buildBookItem(dynamic book) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(
-          context,
-        ).pushNamed(AppRoutes.bookDetail, arguments: book.id);
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Book Cover
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: book.coverImageUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: book.coverImageUrl,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey[200],
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey[200],
-                          child: const Icon(
-                            Icons.book,
-                            size: 40,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.book,
-                          size: 40,
-                          color: Colors.grey,
-                        ),
-                      ),
-              ),
+  Widget _buildBooksGrid(List<BookModel> books, String tab) {
+    // Filter books based on tab (you can implement actual filtering logic here)
+    List<BookModel> filteredBooks = _filterBooksByTab(books, tab);
+
+    if (filteredBooks.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined, size: 64, color: AppColors.gray400),
+            const SizedBox(height: 16),
+            Text(
+              'Không có sách trong danh mục này',
+              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
             ),
-          ),
-          const SizedBox(height: 8),
-          // Book Title
-          Text(
-            book.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              height: 1.3,
-            ),
-          ),
-          const SizedBox(height: 4),
-          // Book Author
-          Text(
-            book.author,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-          ),
-        ],
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.6,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 20,
+        ),
+        itemCount: filteredBooks.length,
+        itemBuilder: (context, index) {
+          final book = filteredBooks[index];
+          return BookCard(book: book);
+        },
       ),
     );
+  }
+
+  List<BookModel> _filterBooksByTab(List<BookModel> books, String tab) {
+    // For now, return all books. You can implement actual filtering logic here
+    // based on book properties like rating, viewCount, createdAt, category, etc.
+    switch (tab) {
+      case 'Popular':
+        // Sort by viewCount descending
+        final sorted = List<BookModel>.from(books);
+        sorted.sort((a, b) => b.viewCount.compareTo(a.viewCount));
+        return sorted;
+      case 'Best Seller':
+        // Sort by rating descending
+        final sorted = List<BookModel>.from(books);
+        sorted.sort((a, b) => b.rating.compareTo(a.rating));
+        return sorted;
+      case 'New Releases':
+        // Sort by createdAt descending (if available)
+        // For now, just return all books
+        return books;
+      case 'Poetry':
+        // Filter by category
+        return books
+            .where(
+              (book) =>
+                  book.category.toLowerCase().contains('poetry') ||
+                  book.category.toLowerCase().contains('thơ'),
+            )
+            .toList();
+      default:
+        return books;
+    }
   }
 
   Widget _buildDrawer() {

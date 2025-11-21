@@ -46,12 +46,12 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     try {
       final bookProvider = Provider.of<BookProvider>(context, listen: false);
       await bookProvider.fetchBookById(widget.bookId);
-      
+
       final book = bookProvider.books.firstWhere(
         (b) => b.id == widget.bookId,
         orElse: () => _book!,
       );
-      
+
       setState(() {
         _book = book;
         _isLoading = false;
@@ -70,24 +70,49 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
 
   Future<void> _loadComments() async {
     try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final currentUserId = authProvider.currentUser?.id;
+
+      // Load tất cả comments của sách này
       final snapshot = await FirebaseFirestore.instance
           .collection('comments')
           .where('bookId', isEqualTo: widget.bookId)
-          .where('isApproved', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
-          .limit(20)
           .get();
 
+      final allComments = snapshot.docs
+          .map((doc) {
+            try {
+              final data = doc.data();
+              return CommentModel.fromMap({'id': doc.id, ...data});
+            } catch (e) {
+              debugPrint('Lỗi parse comment ${doc.id}: $e');
+              return null;
+            }
+          })
+          .whereType<CommentModel>()
+          .where((comment) {
+            // Hiển thị comments đã được approve HOẶC comments của chính user hiện tại
+            return comment.isApproved || comment.userId == currentUserId;
+          })
+          .toList();
+
+      // Sắp xếp theo thời gian tạo (mới nhất trước)
+      allComments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      debugPrint(
+        'Loaded ${allComments.length} comments for book ${widget.bookId}',
+      );
+
       setState(() {
-        _comments = snapshot.docs
-            .map((doc) => CommentModel.fromMap({
-                  'id': doc.id,
-                  ...doc.data(),
-                }))
-            .toList();
+        _comments = allComments;
       });
     } catch (e) {
-      // Handle error silently
+      debugPrint('Lỗi load comments: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi tải bình luận: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -107,16 +132,20 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     if (user == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng đăng nhập để thêm vào yêu thích')),
+          const SnackBar(
+            content: Text('Vui lòng đăng nhập để thêm vào yêu thích'),
+          ),
         );
       }
       return;
     }
 
     try {
-      final userRef = FirebaseFirestore.instance.collection('users').doc(user.id);
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.id);
       final favoriteBooks = List<String>.from(user.favoriteBooks);
-      
+
       if (_isFavorite) {
         favoriteBooks.remove(widget.bookId);
       } else {
@@ -124,7 +153,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       }
 
       await userRef.update({'favoriteBooks': favoriteBooks});
-      
+
       setState(() {
         _isFavorite = !_isFavorite;
       });
@@ -132,17 +161,17 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isFavorite 
-                ? 'Đã thêm vào yêu thích' 
-                : 'Đã xóa khỏi yêu thích'),
+            content: Text(
+              _isFavorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích',
+            ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: ${e.toString()}')));
       }
     }
   }
@@ -176,18 +205,29 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         createdAt: DateTime.now(),
       );
 
+      // Lưu comment vào Firestore
       await FirebaseFirestore.instance
           .collection('comments')
           .doc(comment.id)
           .set(comment.toMap());
 
+      debugPrint('Đã lưu comment: ${comment.id}');
+
+      // Tính lại và cập nhật rating trung bình của sách
+      await _updateBookRating();
+
+      // Xóa form
       _commentController.clear();
       setState(() {
         _userRating = 0.0;
       });
 
+      // Reload comments để hiển thị comment mới
       await _loadComments();
-      await _loadBookDetails(); // Reload to update rating
+      debugPrint('Đã reload comments, số lượng: ${_comments.length}');
+
+      // Reload book details để cập nhật rating
+      await _loadBookDetails();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -203,12 +243,85 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     }
   }
 
-  void _navigateToReader() {
+  Future<void> _updateBookRating() async {
+    try {
+      // Lấy tất cả comments đã được approve của sách này
+      final snapshot = await FirebaseFirestore.instance
+          .collection('comments')
+          .where('bookId', isEqualTo: widget.bookId)
+          .where('isApproved', isEqualTo: true)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        // Nếu không có comment nào được approve, set rating = 0 và reviewCount = 0
+        await FirebaseFirestore.instance
+            .collection('books')
+            .doc(widget.bookId)
+            .update({'rating': 0.0, 'reviewCount': 0});
+        debugPrint('Đã cập nhật rating: 0.0 (0 reviews)');
+        return;
+      }
+
+      // Tính tổng rating và số lượng comments
+      double totalRating = 0.0;
+      int reviewCount = 0;
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final rating = (data['rating'] ?? 0.0).toDouble();
+        if (rating > 0) {
+          totalRating += rating;
+          reviewCount++;
+        }
+      }
+
+      // Tính rating trung bình
+      final averageRating = reviewCount > 0 ? totalRating / reviewCount : 0.0;
+
+      // Làm tròn đến 1 chữ số thập phân
+      final roundedRating = double.parse(averageRating.toStringAsFixed(1));
+
+      // Cập nhật rating và reviewCount vào Firestore
+      await FirebaseFirestore.instance
+          .collection('books')
+          .doc(widget.bookId)
+          .update({'rating': roundedRating, 'reviewCount': reviewCount});
+
+      debugPrint('Đã cập nhật rating: $roundedRating ($reviewCount reviews)');
+    } catch (e) {
+      debugPrint('Lỗi cập nhật rating: $e');
+      // Không throw error để không ảnh hưởng đến việc gửi comment
+    }
+  }
+
+  Future<void> _navigateToReader() async {
     if (_book != null) {
-      Navigator.of(context).pushNamed(
-        AppRoutes.reader,
-        arguments: _book,
-      );
+      try {
+        // Tăng lượt xem lên 1
+        final newViewCount = (_book!.viewCount) + 1;
+
+        // Cập nhật vào Firestore
+        await FirebaseFirestore.instance
+            .collection('books')
+            .doc(_book!.id)
+            .update({'viewCount': newViewCount});
+
+        // Cập nhật state local để hiển thị ngay
+        setState(() {
+          _book = _book!.copyWith(viewCount: newViewCount);
+        });
+
+        // Navigate to reader screen
+        if (mounted) {
+          Navigator.of(context).pushNamed(AppRoutes.reader, arguments: _book);
+        }
+      } catch (e) {
+        // Nếu có lỗi khi cập nhật lượt xem, vẫn cho phép đọc sách
+        debugPrint('Lỗi cập nhật lượt xem: $e');
+        if (mounted) {
+          Navigator.of(context).pushNamed(AppRoutes.reader, arguments: _book);
+        }
+      }
     }
   }
 
@@ -278,28 +391,20 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         children: [
           Text(
             _book!.title,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             _book!.author,
-            style: TextStyle(
-              fontSize: 18,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               RatingBarIndicator(
                 rating: _book!.rating,
-                itemBuilder: (context, index) => const Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                ),
+                itemBuilder: (context, index) =>
+                    const Icon(Icons.star, color: Colors.amber),
                 itemCount: 5,
                 itemSize: 20,
               ),
@@ -347,10 +452,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         children: [
           const Text(
             'Mô tả',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
@@ -404,36 +506,66 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   }
 
   Widget _buildCommentsSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Đánh giá',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+          // Section title - compact
+          Row(
+            children: [
+              Icon(Icons.star_rounded, color: AppColors.primary, size: 22),
+              const SizedBox(width: 8),
+              const Text(
+                'Đánh giá',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
+          // Comment form
           _buildCommentForm(),
           const SizedBox(height: 24),
-          Text(
-            'Bình luận (${_comments.length})',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (_comments.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(
-                child: Text('Chưa có đánh giá nào'),
+          // Comments list header - compact
+          Row(
+            children: [
+              Text(
+                'Bình luận',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
               ),
-            )
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${_comments.length}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Comments list
+          if (_comments.isEmpty)
+            _buildEmptyComments()
           else
             ..._comments.map((comment) => _buildCommentItem(comment)),
         ],
@@ -441,56 +573,146 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     );
   }
 
+  Widget _buildEmptyComments() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : AppColors.gray50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.comment_outlined, size: 20, color: AppColors.gray400),
+          const SizedBox(width: 8),
+          Text(
+            'Chưa có đánh giá nào',
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCommentForm() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.gray50,
-        borderRadius: BorderRadius.circular(12),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gray200, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Đánh giá của bạn'),
-          const SizedBox(height: 8),
-          RatingBar.builder(
-            initialRating: _userRating,
-            minRating: 1,
-            direction: Axis.horizontal,
-            allowHalfRating: false,
-            itemCount: 5,
-            itemSize: 30,
-            itemBuilder: (context, _) => const Icon(
-              Icons.star,
-              color: Colors.amber,
+          // Compact header
+          Text(
+            'Đánh giá của bạn',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : AppColors.textPrimary,
             ),
-            onRatingUpdate: (rating) {
-              setState(() {
-                _userRating = rating;
-              });
-            },
           ),
           const SizedBox(height: 12),
+          // Compact rating section
+          Row(
+            children: [
+              Text(
+                'Sao:',
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: RatingBar.builder(
+                  initialRating: _userRating,
+                  minRating: 1,
+                  direction: Axis.horizontal,
+                  allowHalfRating: false,
+                  itemCount: 5,
+                  itemSize: 28,
+                  itemPadding: const EdgeInsets.symmetric(horizontal: 2),
+                  itemBuilder: (context, _) =>
+                      const Icon(Icons.star_rounded, color: Colors.amber),
+                  onRatingUpdate: (rating) {
+                    setState(() {
+                      _userRating = rating;
+                    });
+                  },
+                ),
+              ),
+              if (_userRating > 0)
+                Text(
+                  _userRating.toStringAsFixed(0),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Compact text field
           TextField(
             controller: _commentController,
             maxLines: 3,
+            style: TextStyle(
+              fontSize: 15,
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
             decoration: InputDecoration(
               hintText: 'Nhập đánh giá của bạn...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+              hintStyle: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 15,
               ),
+              filled: true,
+              fillColor: isDark ? AppColors.backgroundDark : AppColors.gray50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppColors.gray300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppColors.gray300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.all(12),
             ),
           ),
           const SizedBox(height: 12),
+          // Compact submit button
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: _submitComment,
+              icon: const Icon(Icons.send_rounded, size: 18),
+              label: const Text(
+                'Gửi đánh giá',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
               ),
-              child: const Text('Gửi đánh giá'),
             ),
           ),
         ],
@@ -499,59 +721,191 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   }
 
   Widget _buildCommentItem(CommentModel comment) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.gray200),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: comment.userPhotoUrl != null
-                    ? NetworkImage(comment.userPhotoUrl!)
-                    : null,
-                child: comment.userPhotoUrl == null
-                    ? Text(comment.userName[0].toUpperCase())
-                    : null,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // User info header
+            Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundImage: comment.userPhotoUrl != null
+                        ? NetworkImage(comment.userPhotoUrl!)
+                        : null,
+                    backgroundColor: Colors.transparent,
+                    child: comment.userPhotoUrl == null
+                        ? Text(
+                            comment.userName.isNotEmpty
+                                ? comment.userName[0].toUpperCase()
+                                : 'U',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 20,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // User name and rating
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        comment.userName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          RatingBarIndicator(
+                            rating: comment.rating,
+                            itemBuilder: (context, index) => const Icon(
+                              Icons.star_rounded,
+                              color: Colors.amber,
+                            ),
+                            itemCount: 5,
+                            itemSize: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            comment.rating.toStringAsFixed(1),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.amber,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Time
+                Text(
+                  _formatDate(comment.createdAt),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Comment content
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.backgroundDark
+                    : AppColors.gray50.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      comment.userName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    RatingBarIndicator(
-                      rating: comment.rating,
-                      itemBuilder: (context, index) => const Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 14,
-                      ),
-                      itemCount: 5,
-                      itemSize: 14,
-                    ),
-                  ],
+              child: Text(
+                comment.content,
+                style: TextStyle(
+                  fontSize: 15,
+                  height: 1.6,
+                  color: isDark ? Colors.white70 : AppColors.textPrimary,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(comment.content),
-        ],
+            ),
+            // Rating badge at bottom
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.amber.withOpacity(0.2),
+                    Colors.orange.withOpacity(0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.amber.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Đánh giá ${comment.rating.toStringAsFixed(1)}/5.0',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.amber,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        if (difference.inMinutes == 0) {
+          return 'Vừa xong';
+        }
+        return '${difference.inMinutes} phút trước';
+      }
+      return '${difference.inHours} giờ trước';
+    } else if (difference.inDays == 1) {
+      return 'Hôm qua';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} ngày trước';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+}

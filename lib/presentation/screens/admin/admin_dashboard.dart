@@ -90,10 +90,7 @@ class AdminDashboard extends StatelessWidget {
                 subtitle: 'Xem thống kê ứng dụng',
                 color: AppColors.info,
                 onTap: () {
-                  // TODO: Implement statistics screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tính năng đang phát triển')),
-                  );
+                  Navigator.of(context).pushNamed(AppRoutes.adminStatistics);
                 },
               ),
               _buildDashboardCard(
