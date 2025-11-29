@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/auth_provider.dart';
 import '../auth/login_screen.dart';
 import '../admin/admin_dashboard.dart';
+import '../favorite/user_favorite_books.dart';
 import 'edit_profile_screen.dart';
 import 'notification_settings_screen.dart';
 import 'security_settings_screen.dart';
@@ -56,6 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       floating: false,
       pinned: true,
       backgroundColor: AppColors.primary,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       flexibleSpace: FlexibleSpaceBar(
         title: Text(
           'Tài khoản',
@@ -359,12 +362,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
           _buildMenuItem(
-            icon: Icons.library_books,
+            icon: Icons.favorite,
             title: 'Sách yêu thích',
             subtitle: '${user?.favoriteBooks.length ?? 0} cuốn sách',
             color: Colors.red,
             onTap: () {
-              // Navigate to favorites
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const UserFavoriteBooksScreen(),
+                ),
+              );
             },
           ),
           _buildMenuItem(
