@@ -1,13 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/models/book_model.dart';
+import '../../../data/models/category_model.dart';
 import '../../../data/services/cloudinary_service.dart';
+import '../../../data/services/category_service.dart';
 import '../../../providers/book_provider.dart';
+import '../../../providers/category_provider.dart';
 import '../../widgets/loading_widget.dart';
 
 class BookManagementScreen extends StatefulWidget {
@@ -26,27 +30,33 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
   @override
   void initState() {
     super.initState();
-    _loadBooks();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadBooks();
+    });
   }
 
   Future<void> _loadBooks() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
+    if (!mounted) return;
 
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
       final bookProvider = Provider.of<BookProvider>(context, listen: false);
       await bookProvider.fetchBooks();
+
+      if (!mounted) return;
 
       setState(() {
         _books = bookProvider.books;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lỗi tải danh sách: ${e.toString()}')),
         );
@@ -210,7 +220,17 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
 
     if (confirm == true) {
       try {
+        final categoryName = book.category;
         await _firestore.collection('books').doc(book.id).delete();
+
+        // Update book count for category
+        final categoryService = CategoryService();
+        try {
+          await categoryService.updateBookCountByName(categoryName);
+        } catch (e) {
+          debugPrint('Lỗi cập nhật số lượng sách: $e');
+        }
+
         await _loadBooks();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -552,62 +572,74 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                       Row(
                         children: [
                           // Rating
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.star_rounded,
-                                  size: 16,
-                                  color: Colors.amber,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  book.rating.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    size: 16,
                                     color: Colors.amber,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      book.rating.toStringAsFixed(1),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.amber,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 8),
                           // Views
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6C63FF).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.visibility_rounded,
-                                  size: 16,
-                                  color: Color(0xFF6C63FF),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${book.viewCount}',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6C63FF).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.visibility_rounded,
+                                    size: 16,
                                     color: Color(0xFF6C63FF),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      '${book.viewCount}',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF6C63FF),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -691,6 +723,11 @@ class _BookEditDialogState extends State<_BookEditDialog> {
   PlatformFile? _selectedCoverImage;
   PlatformFile? _selectedBookFile;
 
+  // Category selection
+  List<CategoryModel> _categories = [];
+  CategoryModel? _selectedCategory;
+  bool _isLoadingCategories = false;
+
   @override
   void initState() {
     super.initState();
@@ -706,6 +743,93 @@ class _BookEditDialogState extends State<_BookEditDialog> {
       _isFree = book.isFree;
       _coverImageUrl = book.coverImageUrl;
       _fileUrl = book.fileUrl;
+    }
+    // Load categories after build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCategories();
+    });
+  }
+
+  Future<void> _loadCategories() async {
+    if (!mounted) return;
+
+    // Set loading state safely
+    Future.microtask(() {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingCategories = true;
+      });
+    });
+
+    try {
+      final categoryProvider = Provider.of<CategoryProvider>(
+        context,
+        listen: false,
+      );
+      await categoryProvider.fetchCategories();
+
+      if (!mounted) return;
+
+      // Update categories safely after async operation
+      Future.microtask(() {
+        if (!mounted) return;
+        setState(() {
+          _categories = categoryProvider.categories;
+          _isLoadingCategories = false;
+        });
+
+        // If editing a book, try to find the matching category
+        if (widget.book != null &&
+            _categoryController.text.isNotEmpty &&
+            _categories.isNotEmpty) {
+          final categoryName = _categoryController.text;
+          try {
+            final matchingCategory = _categories.firstWhere(
+              (cat) => cat.name == categoryName,
+            );
+            Future.microtask(() {
+              if (!mounted) return;
+              setState(() {
+                _selectedCategory = matchingCategory;
+              });
+            });
+          } catch (e) {
+            // Category not found, try to find by partial match or leave as is
+            try {
+              final partialMatch = _categories.firstWhere(
+                (cat) =>
+                    cat.name.toLowerCase().contains(
+                      categoryName.toLowerCase(),
+                    ) ||
+                    categoryName.toLowerCase().contains(cat.name.toLowerCase()),
+              );
+              Future.microtask(() {
+                if (!mounted) return;
+                setState(() {
+                  _selectedCategory = partialMatch;
+                  _categoryController.text = partialMatch.name;
+                });
+              });
+            } catch (e2) {
+              // No match found, leave as is
+            }
+          }
+        }
+      });
+    } catch (e) {
+      Future.microtask(() {
+        if (!mounted) return;
+        setState(() {
+          _isLoadingCategories = false;
+        });
+        if (mounted && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Lỗi tải danh sách thể loại: ${e.toString()}'),
+            ),
+          );
+        }
+      });
     }
   }
 
@@ -727,8 +851,12 @@ class _BookEditDialogState extends State<_BookEditDialog> {
     );
 
     if (result != null && result.files.single.path != null) {
-      setState(() {
-        _selectedCoverImage = result.files.single;
+      Future.microtask(() {
+        if (mounted) {
+          setState(() {
+            _selectedCoverImage = result.files.single;
+          });
+        }
       });
 
       if (mounted) {
@@ -746,8 +874,12 @@ class _BookEditDialogState extends State<_BookEditDialog> {
     );
 
     if (result != null && result.files.single.path != null) {
-      setState(() {
-        _selectedBookFile = result.files.single;
+      Future.microtask(() {
+        if (mounted) {
+          setState(() {
+            _selectedBookFile = result.files.single;
+          });
+        }
       });
 
       if (mounted) {
@@ -853,8 +985,13 @@ class _BookEditDialogState extends State<_BookEditDialog> {
       }
     }
 
-    setState(() {
-      _isUploading = true;
+    // Use microtask to ensure safe setState
+    Future.microtask(() {
+      if (mounted) {
+        setState(() {
+          _isUploading = true;
+        });
+      }
     });
 
     try {
@@ -874,11 +1011,26 @@ class _BookEditDialogState extends State<_BookEditDialog> {
         debugPrint('Book file uploaded: $finalFileUrl');
       }
 
+      // Validate category selection
+      if (_selectedCategory == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Vui lòng chọn thể loại')));
+        Future.microtask(() {
+          if (mounted) {
+            setState(() {
+              _isUploading = false;
+            });
+          }
+        });
+        return;
+      }
+
       final bookData = {
         'title': _titleController.text.trim(),
         'author': _authorController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'category': _categoryController.text.trim(),
+        'category': _selectedCategory!.name,
         'coverImageUrl': finalCoverImageUrl,
         'fileUrl': finalFileUrl,
         'format': _selectedFormat.name,
@@ -895,7 +1047,9 @@ class _BookEditDialogState extends State<_BookEditDialog> {
         'tags': <String>[],
       };
 
+      String? oldCategoryName;
       if (widget.book != null) {
+        oldCategoryName = widget.book!.category;
         await FirebaseFirestore.instance
             .collection('books')
             .doc(widget.book!.id)
@@ -904,29 +1058,66 @@ class _BookEditDialogState extends State<_BookEditDialog> {
         await FirebaseFirestore.instance.collection('books').add(bookData);
       }
 
-      setState(() {
-        _isUploading = false;
-      });
+      // Update book count for categories
+      final categoryService = CategoryService();
+      try {
+        // Update count for new category
+        await categoryService.updateBookCountByName(_selectedCategory!.name);
+
+        // If editing and category changed, update old category count too
+        if (widget.book != null &&
+            oldCategoryName != null &&
+            oldCategoryName != _selectedCategory!.name) {
+          await categoryService.updateBookCountByName(oldCategoryName);
+        }
+      } catch (e) {
+        debugPrint('Lỗi cập nhật số lượng sách: $e');
+      }
 
       if (mounted) {
+        // Close dialog first
         Navigator.pop(context);
-        widget.onSaved();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.book != null
-                  ? 'Đã cập nhật sách'
-                  : 'Đã thêm sách thành công',
-            ),
-          ),
-        );
+
+        // Update state after navigation completes
+        Future.microtask(() {
+          if (mounted) {
+            setState(() {
+              _isUploading = false;
+            });
+          }
+        });
+
+        // Wait multiple frames before calling onSaved to ensure dialog is fully closed
+        // and all builds are complete
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            Future.delayed(const Duration(milliseconds: 200), () {
+              widget.onSaved();
+              if (mounted && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      widget.book != null
+                          ? 'Đã cập nhật sách'
+                          : 'Đã thêm sách thành công',
+                    ),
+                  ),
+                );
+              }
+            });
+          });
+        });
       }
     } catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
-
       if (mounted) {
+        // Use microtask to ensure safe setState
+        Future.microtask(() {
+          if (mounted) {
+            setState(() {
+              _isUploading = false;
+            });
+          }
+        });
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Lỗi: ${e.toString()}')));
@@ -1063,21 +1254,7 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                       _buildSectionLabel('Phân loại', Icons.category_outlined),
                       const SizedBox(height: 16),
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _categoryController,
-                              label: 'Thể loại',
-                              icon: Icons.local_offer_outlined,
-                              validator: (value) => value?.isEmpty ?? true
-                                  ? 'Vui lòng nhập thể loại'
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                        ],
-                      ),
+                      _buildCategoryDropdown(),
 
                       const SizedBox(height: 24),
 
@@ -1089,18 +1266,11 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                       _buildSectionLabel('Chi tiết', Icons.settings_outlined),
                       const SizedBox(height: 16),
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _pageCountController,
-                              label: 'Số trang',
-                              icon: Icons.auto_stories_outlined,
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                        ],
+                      _buildTextField(
+                        controller: _pageCountController,
+                        label: 'Số trang',
+                        icon: Icons.auto_stories_outlined,
+                        keyboardType: TextInputType.number,
                       ),
 
                       if (!_isFree) ...[
@@ -1191,7 +1361,7 @@ class _BookEditDialogState extends State<_BookEditDialog> {
 
             // Footer with action buttons
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(
@@ -1205,66 +1375,78 @@ class _BookEditDialogState extends State<_BookEditDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  OutlinedButton(
-                    onPressed: _isUploading
-                        ? null
-                        : () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 28,
-                        vertical: 14,
-                      ),
-                      side: BorderSide(color: Colors.grey[300]!, width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.close, size: 18, color: Colors.grey[700]),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Hủy',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
-                          ),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isUploading
+                          ? null
+                          : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
                         ),
-                      ],
+                        side: BorderSide(color: Colors.grey[300]!, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.close, size: 18, color: Colors.grey[700]),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              'Hủy',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _isUploading ? null : _saveBook,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6C63FF),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 14,
-                      ),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      shadowColor: const Color(0xFF6C63FF).withOpacity(0.3),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.save_outlined, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          widget.book != null ? 'Cập nhật' : 'Lưu',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.3,
-                          ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isUploading ? null : _saveBook,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6C63FF),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
                         ),
-                      ],
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        shadowColor: const Color(0xFF6C63FF).withOpacity(0.3),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.save_outlined, size: 18),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              widget.book != null ? 'Cập nhật' : 'Lưu',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.2,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -1462,6 +1644,339 @@ class _BookEditDialogState extends State<_BookEditDialog> {
               Icons.arrow_forward_ios,
               size: 16,
               color: hasFile ? color : Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: _isLoadingCategories || _categories.isEmpty
+            ? null
+            : () => _showCategoryPicker(),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _selectedCategory != null
+                      ? _getColorFromHex(
+                          _selectedCategory!.color,
+                        ).withOpacity(0.1)
+                      : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.local_offer_outlined,
+                  color: _selectedCategory != null
+                      ? _getColorFromHex(_selectedCategory!.color)
+                      : Colors.grey[600],
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Thể loại',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    _isLoadingCategories
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _selectedCategory != null
+                                ? _selectedCategory!.name
+                                : 'Chọn thể loại',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: _selectedCategory != null
+                                  ? const Color(0xFF2D3142)
+                                  : Colors.grey[400],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.arrow_drop_down_rounded,
+                color: Colors.grey[600],
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getColorFromHex(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
+  void _showCategoryPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF6C63FF),
+                    const Color(0xFF6C63FF).withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.category_outlined,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Chọn thể loại',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Categories list
+            Flexible(
+              child: _categories.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.category_outlined,
+                            size: 64,
+                            color: Colors.grey[300],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Chưa có thể loại nào',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _categories.length,
+                      itemBuilder: (context, index) {
+                        final category = _categories[index];
+                        final isSelected = _selectedCategory?.id == category.id;
+                        final categoryColor = _getColorFromHex(category.color);
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? categoryColor.withOpacity(0.1)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected
+                                  ? categoryColor
+                                  : Colors.grey[300]!,
+                              width: isSelected ? 2 : 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isSelected
+                                    ? categoryColor.withOpacity(0.2)
+                                    : Colors.grey.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () async {
+                                _selectedCategory = category;
+                                _categoryController.text = category.name;
+                                Navigator.pop(context);
+                                // Wait a bit before updating state
+                                await Future.delayed(
+                                  const Duration(milliseconds: 100),
+                                );
+                                if (mounted) {
+                                  setState(() {});
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            categoryColor,
+                                            categoryColor.withOpacity(0.7),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: categoryColor.withOpacity(
+                                              0.3,
+                                            ),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.local_offer_rounded,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            category.name,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF2D3142),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                          if (category
+                                              .description
+                                              .isNotEmpty) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              category.description,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey[600],
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    if (isSelected) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: categoryColor,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),

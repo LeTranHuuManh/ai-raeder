@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -141,21 +142,13 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     }
 
     try {
-      final userRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.id);
-      final favoriteBooks = List<String>.from(user.favoriteBooks);
+      await authProvider.toggleFavoriteBook(widget.bookId);
 
-      if (_isFavorite) {
-        favoriteBooks.remove(widget.bookId);
-      } else {
-        favoriteBooks.add(widget.bookId);
-      }
-
-      await userRef.update({'favoriteBooks': favoriteBooks});
-
+      // Update local state based on new user data
       setState(() {
-        _isFavorite = !_isFavorite;
+        _isFavorite =
+            authProvider.currentUser?.favoriteBooks.contains(widget.bookId) ??
+            false;
       });
 
       if (mounted) {
@@ -366,6 +359,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     return SliverAppBar(
       expandedHeight: 300,
       pinned: true,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       flexibleSpace: FlexibleSpaceBar(
         background: CachedNetworkImage(
           imageUrl: _book!.coverImageUrl,
@@ -408,10 +402,13 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                 itemCount: 5,
                 itemSize: 20,
               ),
-              const SizedBox(width: 8),
-              Text(
-                '${_book!.rating.toStringAsFixed(1)} (${_book!.reviewCount})',
-                style: TextStyle(color: AppColors.textSecondary),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  '${_book!.rating.toStringAsFixed(1)} (${_book!.reviewCount})',
+                  style: TextStyle(color: AppColors.textSecondary),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -488,7 +485,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           IconButton(
             onPressed: _toggleFavorite,
             icon: Icon(
@@ -647,7 +644,8 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                   },
                 ),
               ),
-              if (_userRating > 0)
+              if (_userRating > 0) ...[
+                const SizedBox(width: 8),
                 Text(
                   _userRating.toStringAsFixed(0),
                   style: TextStyle(
@@ -656,6 +654,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                     color: AppColors.primary,
                   ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -796,6 +795,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                       ),
                       const SizedBox(height: 6),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           RatingBarIndicator(
                             rating: comment.rating,
@@ -806,7 +806,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                             itemCount: 5,
                             itemSize: 16,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Text(
                             comment.rating.toStringAsFixed(1),
                             style: TextStyle(

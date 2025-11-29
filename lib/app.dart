@@ -18,7 +18,10 @@ import 'presentation/screens/admin/category_management.dart';
 import 'presentation/screens/admin/statistics_screen.dart';
 import 'presentation/screens/book_detail/book_detail_screen.dart';
 import 'presentation/screens/reader/reader_screen.dart';
+import 'presentation/screens/favorite/user_favorite_books.dart';
+import 'presentation/screens/library/list_category_books.dart';
 import 'data/models/book_model.dart';
+import 'data/models/category_model.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -47,6 +50,8 @@ class MyApp extends StatelessWidget {
             AppRoutes.adminUsers: (context) => const UserManagementScreen(),
             AppRoutes.adminCategories: (context) => const CategoryManagement(),
             AppRoutes.adminStatistics: (context) => const StatisticsScreen(),
+            AppRoutes.favoriteBooks: (context) =>
+                const UserFavoriteBooksScreen(),
           },
           onGenerateRoute: (settings) {
             // Handle routes with parameters
@@ -60,6 +65,12 @@ class MyApp extends StatelessWidget {
               final book = settings.arguments as BookModel;
               return MaterialPageRoute(
                 builder: (context) => ReaderScreen(book: book),
+              );
+            }
+            if (settings.name == AppRoutes.listCategoryBooks) {
+              final category = settings.arguments as CategoryModel;
+              return MaterialPageRoute(
+                builder: (context) => ListCategoryBooksScreen(category: category),
               );
             }
             return null;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 
 class AppTheme {
@@ -14,6 +15,7 @@ class AppTheme {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
     );
   }
@@ -30,6 +32,7 @@ class AppTheme {
         backgroundColor: Colors.grey[900],
         foregroundColor: Colors.white,
         elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
     );
   }
