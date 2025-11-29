@@ -107,15 +107,20 @@ service cloud.firestore {
     match /readingHistory/{historyId} {
       // Users can only read their own reading history, admins can read all
       allow read: if isAuthenticated() && 
-                    (resource.data.userId == request.auth.uid || isAdmin());
+                    (!exists(/databases/$(database)/documents/readingHistory/$(historyId)) ||
+                     resource.data.userId == request.auth.uid || 
+                     isAdmin());
       
       // Users can create their own reading history
       allow create: if isAuthenticated() && 
                       request.resource.data.userId == request.auth.uid;
       
       // Users can update their own reading history
+      // Must ensure userId matches and cannot be changed
       allow update: if isAuthenticated() && 
-                      resource.data.userId == request.auth.uid;
+                      exists(/databases/$(database)/documents/readingHistory/$(historyId)) &&
+                      resource.data.userId == request.auth.uid &&
+                      request.resource.data.userId == request.auth.uid;
       
       // Users can delete their own reading history, admins can delete any
       allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) ||

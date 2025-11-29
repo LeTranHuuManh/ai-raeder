@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
@@ -36,6 +37,24 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reset selected index to 0 when returning to home screen
+    final route = ModalRoute.of(context);
+    if (route != null && route.isCurrent && route.settings.name == AppRoutes.home) {
+      if (_selectedIndex != 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _selectedIndex = 0;
+            });
+          }
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
@@ -48,11 +67,27 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Ensure selected index is 0 when on home screen
+    final route = ModalRoute.of(context);
+    if (route != null && route.isCurrent && route.settings.name == AppRoutes.home) {
+      if (_selectedIndex != 0) {
+        // Use microtask to avoid setState during build
+        Future.microtask(() {
+          if (mounted) {
+            setState(() {
+              _selectedIndex = 0;
+            });
+          }
+        });
+      }
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.black87),
@@ -507,21 +542,30 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildBottomNav() {
     return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
       currentIndex: _selectedIndex,
+      selectedItemColor: AppColors.primary,
+      unselectedItemColor: AppColors.textSecondary,
       onTap: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-
-        switch (index) {
-          case 0:
-            break;
-          case 1:
-            Navigator.of(context).pushNamed(AppRoutes.library);
-            break;
-          case 2:
-            Navigator.of(context).pushNamed(AppRoutes.profile);
-            break;
+        // Only update selected index if staying on home (index 0)
+        if (index == 0) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        } else {
+          // For other tabs, navigate but don't update selected index
+          // The index will be reset when returning to home
+          switch (index) {
+            case 1:
+              Navigator.of(context).pushNamed(AppRoutes.favoriteBooks);
+              break;
+            case 2:
+              Navigator.of(context).pushNamed(AppRoutes.library);
+              break;
+            case 3:
+              Navigator.of(context).pushNamed(AppRoutes.profile);
+              break;
+          }
         }
       },
       items: const [
@@ -529,6 +573,11 @@ class _HomeScreenState extends State<HomeScreen>
           icon: Icon(Icons.home_outlined),
           activeIcon: Icon(Icons.home),
           label: 'Trang chủ',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.favorite_border),
+          activeIcon: Icon(Icons.favorite),
+          label: 'Yêu thích',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.library_books_outlined),
