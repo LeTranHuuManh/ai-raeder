@@ -393,7 +393,7 @@ class _CategoryManagementState extends State<CategoryManagement> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         flex: 2,
                         child: ElevatedButton(
@@ -831,7 +831,7 @@ class _CategoryManagementState extends State<CategoryManagement> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         flex: 2,
                         child: ElevatedButton(
@@ -993,7 +993,7 @@ class _CategoryManagementState extends State<CategoryManagement> {
                               size: 24,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1053,7 +1053,7 @@ class _CategoryManagementState extends State<CategoryManagement> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
@@ -1350,7 +1350,7 @@ class _CategoryManagementState extends State<CategoryManagement> {
                                       size: 32,
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
+                                  const SizedBox(width: 12),
                                   // Category info
                                   Expanded(
                                     child: Column(
@@ -1381,6 +1381,7 @@ class _CategoryManagementState extends State<CategoryManagement> {
                                         ),
                                         const SizedBox(height: 8),
                                         Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Icon(
                                               Icons.book_outlined,
@@ -1388,12 +1389,15 @@ class _CategoryManagementState extends State<CategoryManagement> {
                                               color: AppColors.gray500,
                                             ),
                                             const SizedBox(width: 4),
-                                            Text(
-                                              '${category.bookCount} cuốn sách',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: AppColors.gray500,
+                                            Flexible(
+                                              child: Text(
+                                                '${category.bookCount} cuốn sách',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: AppColors.gray500,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                           ],
@@ -1401,7 +1405,7 @@ class _CategoryManagementState extends State<CategoryManagement> {
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 6),
                                   // Action buttons
                                   Column(
                                     mainAxisSize: MainAxisSize.min,

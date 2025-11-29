@@ -412,6 +412,37 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Toggle favorite book
+  Future<void> toggleFavoriteBook(String bookId) async {
+    if (_currentUser == null || _firestore == null) return;
+
+    try {
+      final currentFavorites = List<String>.from(_currentUser!.favoriteBooks);
+
+      if (currentFavorites.contains(bookId)) {
+        currentFavorites.remove(bookId);
+      } else {
+        currentFavorites.add(bookId);
+      }
+
+      // Optimistic update: update local state immediately
+      _currentUser = _currentUser!.copyWith(favoriteBooks: currentFavorites);
+      notifyListeners();
+
+      // Update Firestore
+      await _firestore!.collection('users').doc(_currentUser!.id).update({
+        'favoriteBooks': currentFavorites,
+      });
+    } catch (e) {
+      debugPrint('Error toggling favorite book: $e');
+      // If error occurs, reload user data to sync with server
+      if (_currentUser != null) {
+        await _loadUserData(_currentUser!.id);
+      }
+      rethrow; // Let the UI handle the error display
+    }
+  }
+
   String _getErrorMessage(String code) {
     switch (code) {
       case 'user-not-found':

@@ -127,16 +127,39 @@ class CategoryService {
     }
   }
 
-  // Get book count for a category
-  Future<int> _getBookCountForCategory(String categoryId) async {
+  // Get book count for a category by category name
+  Future<int> _getBookCountForCategory(String categoryName) async {
     try {
       final snapshot = await _firestore
           .collection('books')
-          .where('categoryId', isEqualTo: categoryId)
+          .where('category', isEqualTo: categoryName)
           .get();
       return snapshot.docs.length;
     } catch (e) {
       return 0;
+    }
+  }
+
+  // Update book count for category by name
+  Future<void> updateBookCountByName(String categoryName) async {
+    try {
+      // Find category by name
+      final categoriesSnapshot = await _firestore
+          .collection(_collection)
+          .where('name', isEqualTo: categoryName)
+          .get();
+      
+      if (categoriesSnapshot.docs.isEmpty) return;
+      
+      final categoryId = categoriesSnapshot.docs.first.id;
+      final count = await _getBookCountForCategory(categoryName);
+      
+      await _firestore.collection(_collection).doc(categoryId).update({
+        'bookCount': count,
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+    } catch (e) {
+      throw Exception('Lỗi khi cập nhật số lượng sách: $e');
     }
   }
 
