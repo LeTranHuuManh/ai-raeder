@@ -40,4 +40,28 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
   end
+
+  # Fix build with newer Abseil: gRPC-Core uses LOG_IF/DLOG_IF/VLOG but this
+  # Abseil Pod exposes the ABSL_* variants.
+  grpc_trace_impl = File.join(__dir__, 'Pods', 'gRPC-Core', 'src', 'core', 'lib', 'debug', 'trace_impl.h')
+  if File.exist?(grpc_trace_impl)
+    contents = File.read(grpc_trace_impl)
+    unless contents.include?('absl/log/absl_log.h')
+      contents = contents.sub(
+        "#include \"absl/log/log.h\"\n",
+        "#include \"absl/log/log.h\"\n" \
+        "#include \"absl/log/absl_log.h\"\n\n" \
+        "#ifndef LOG_IF\n" \
+        "#define LOG_IF(severity, condition) ABSL_LOG_IF(severity, condition)\n" \
+        "#endif\n" \
+        "#ifndef DLOG_IF\n" \
+        "#define DLOG_IF(severity, condition) ABSL_DLOG_IF(severity, condition)\n" \
+        "#endif\n" \
+        "#ifndef VLOG\n" \
+        "#define VLOG(verbose_level) ABSL_VLOG(verbose_level)\n" \
+        "#endif\n"
+      )
+      File.write(grpc_trace_impl, contents)
+    end
+  end
 end

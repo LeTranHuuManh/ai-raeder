@@ -238,6 +238,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               value: '${_stats['totalBooks'] ?? 0}',
               color: AppColors.primary,
               gradient: AppColors.primaryGradient,
+              textColor: AppColors.accent,
             ),
             _buildStatCard(
               icon: Icons.people_rounded,
@@ -245,6 +246,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               value: '${_stats['totalUsers'] ?? 0}',
               color: AppColors.secondary,
               gradient: AppColors.secondaryGradient,
+              textColor: Colors.white,
             ),
             _buildStatCard(
               icon: Icons.category_rounded,
@@ -254,6 +256,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               gradient: const LinearGradient(
                 colors: [AppColors.info, Color(0xFF60A5FA)],
               ),
+              textColor: Colors.white,
             ),
             _buildStatCard(
               icon: Icons.comment_rounded,
@@ -263,6 +266,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               gradient: const LinearGradient(
                 colors: [AppColors.warning, Color(0xFFFBBF24)],
               ),
+              textColor: AppColors.accent,
             ),
             _buildStatCard(
               icon: Icons.visibility_rounded,
@@ -272,6 +276,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               gradient: const LinearGradient(
                 colors: [AppColors.success, Color(0xFF34D399)],
               ),
+              textColor: Colors.white,
             ),
             _buildStatCard(
               icon: Icons.star_rounded,
@@ -281,6 +286,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               gradient: const LinearGradient(
                 colors: [Colors.amber, Colors.orange],
               ),
+              textColor: AppColors.accent,
             ),
           ],
         ),
@@ -294,6 +300,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     required String value,
     required Color color,
     required Gradient gradient,
+    Color textColor = Colors.white,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -317,19 +324,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: textColor.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: Colors.white, size: 22),
+              child: Icon(icon, color: textColor, size: 22),
             ),
             const SizedBox(height: 12),
             Flexible(
               child: Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: textColor,
                   height: 1.1,
                 ),
                 maxLines: 1,
@@ -342,7 +349,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 title,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.white.withOpacity(0.95),
+                  color: textColor.withOpacity(0.95),
                   fontWeight: FontWeight.w600,
                   height: 1.2,
                 ),

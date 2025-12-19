@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../data/models/book_model.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/services/cloudinary_service.dart';
@@ -75,12 +76,12 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: AppColors.accent.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.warning_rounded,
-                color: Colors.red,
+                color: AppColors.accent,
                 size: 28,
               ),
             ),
@@ -91,7 +92,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3142),
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
@@ -139,7 +140,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: Color(0xFF2D3142),
+                            color: AppColors.textPrimary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -164,7 +165,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
             Text(
               'Hành động này không thể hoàn tác!',
               style: TextStyle(
-                color: Colors.red[400],
+                color: AppColors.accent.withOpacity(0.7),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -194,8 +195,8 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -270,7 +271,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                   ),
                 ],
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.primary,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -301,18 +302,18 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF6C63FF)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Quản lý sách',
           style: TextStyle(
-            color: Color(0xFF2D3142),
+            color: AppColors.accent,
             fontWeight: FontWeight.bold,
             fontSize: 22,
           ),
@@ -321,11 +322,11 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
           Container(
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF6C63FF).withOpacity(0.1),
+              color: AppColors.primary.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF6C63FF)),
+              icon: const Icon(Icons.refresh_rounded, color: AppColors.primary),
               onPressed: _loadBooks,
             ),
           ),
@@ -351,9 +352,9 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
               decoration: InputDecoration(
                 hintText: 'Tìm kiếm sách...',
                 hintStyle: TextStyle(color: Colors.grey[400]),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.search_rounded,
-                  color: Color(0xFF6C63FF),
+                  color: AppColors.accent,
                   size: 24,
                 ),
                 border: OutlineInputBorder(
@@ -432,15 +433,11 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
       ),
       floatingActionButton: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6C63FF), Color(0xFF5A52D5)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: AppColors.accent,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6C63FF).withOpacity(0.4),
+              color: AppColors.accent.withOpacity(0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -450,7 +447,11 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
           onPressed: () => _showAddBookDialog(),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          child: const Icon(Icons.add_rounded, size: 32),
+          child: const Icon(
+            Icons.add_rounded,
+            size: 32,
+            color: AppColors.primary,
+          ),
         ),
       ),
     );
@@ -549,7 +550,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3142),
+                          color: AppColors.textPrimary,
                           height: 1.3,
                         ),
                         maxLines: 2,
@@ -579,25 +580,25 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.amber.withOpacity(0.1),
+                                color: AppColors.primary,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.star_rounded,
                                     size: 16,
-                                    color: Colors.amber,
+                                    color: AppColors.accent,
                                   ),
                                   const SizedBox(width: 4),
                                   Flexible(
                                     child: Text(
                                       book.rating.toStringAsFixed(1),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.amber,
+                                        color: AppColors.accent,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -615,25 +616,25 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF6C63FF).withOpacity(0.1),
+                                color: AppColors.accent.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.visibility_rounded,
                                     size: 16,
-                                    color: Color(0xFF6C63FF),
+                                    color: AppColors.accent,
                                   ),
                                   const SizedBox(width: 4),
                                   Flexible(
                                     child: Text(
                                       '${book.viewCount}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF6C63FF),
+                                        color: AppColors.accent,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -652,13 +653,13 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6C63FF).withOpacity(0.1),
+                        color: AppColors.primary.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.edit_rounded,
-                          color: Color(0xFF6C63FF),
+                          color: AppColors.accent,
                           size: 20,
                         ),
                         onPressed: () => _showAddBookDialog(book: book),
@@ -669,13 +670,13 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: AppColors.accent.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.delete_rounded,
-                          color: Colors.red,
+                          color: AppColors.accent,
                           size: 20,
                         ),
                         onPressed: () => _deleteBook(book),
@@ -723,9 +724,9 @@ class _BookEditDialogState extends State<_BookEditDialog> {
   PlatformFile? _selectedCoverImage;
   PlatformFile? _selectedBookFile;
 
-  // Category selection
+  // Category selection (multiselect)
   List<CategoryModel> _categories = [];
-  CategoryModel? _selectedCategory;
+  List<CategoryModel> _selectedCategories = [];
   bool _isLoadingCategories = false;
 
   @override
@@ -778,42 +779,52 @@ class _BookEditDialogState extends State<_BookEditDialog> {
           _isLoadingCategories = false;
         });
 
-        // If editing a book, try to find the matching category
+        // If editing a book, try to find the matching categories
         if (widget.book != null &&
             _categoryController.text.isNotEmpty &&
             _categories.isNotEmpty) {
           final categoryName = _categoryController.text;
-          try {
-            final matchingCategory = _categories.firstWhere(
-              (cat) => cat.name == categoryName,
-            );
-            Future.microtask(() {
-              if (!mounted) return;
-              setState(() {
-                _selectedCategory = matchingCategory;
-              });
-            });
-          } catch (e) {
-            // Category not found, try to find by partial match or leave as is
-            try {
-              final partialMatch = _categories.firstWhere(
-                (cat) =>
-                    cat.name.toLowerCase().contains(
-                      categoryName.toLowerCase(),
-                    ) ||
-                    categoryName.toLowerCase().contains(cat.name.toLowerCase()),
-              );
-              Future.microtask(() {
-                if (!mounted) return;
-                setState(() {
-                  _selectedCategory = partialMatch;
-                  _categoryController.text = partialMatch.name;
-                });
-              });
-            } catch (e2) {
-              // No match found, leave as is
+          // Support multiple categories separated by comma
+          final categoryNames = categoryName
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+
+          Future.microtask(() {
+            if (!mounted) return;
+            final matchedCategories = <CategoryModel>[];
+
+            for (final name in categoryNames) {
+              try {
+                final matchingCategory = _categories.firstWhere(
+                  (cat) => cat.name.toLowerCase() == name.toLowerCase(),
+                );
+                matchedCategories.add(matchingCategory);
+              } catch (e) {
+                // Try partial match
+                try {
+                  final partialMatch = _categories.firstWhere(
+                    (cat) =>
+                        cat.name.toLowerCase().contains(name.toLowerCase()) ||
+                        name.toLowerCase().contains(cat.name.toLowerCase()),
+                  );
+                  matchedCategories.add(partialMatch);
+                } catch (e2) {
+                  // No match found for this category
+                }
+              }
             }
-          }
+
+            if (matchedCategories.isNotEmpty) {
+              setState(() {
+                _selectedCategories = matchedCategories;
+                _categoryController.text = matchedCategories
+                    .map((c) => c.name)
+                    .join(', ');
+              });
+            }
+          });
         }
       });
     } catch (e) {
@@ -1012,10 +1023,10 @@ class _BookEditDialogState extends State<_BookEditDialog> {
       }
 
       // Validate category selection
-      if (_selectedCategory == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Vui lòng chọn thể loại')));
+      if (_selectedCategories.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng chọn ít nhất một thể loại')),
+        );
         Future.microtask(() {
           if (mounted) {
             setState(() {
@@ -1026,11 +1037,16 @@ class _BookEditDialogState extends State<_BookEditDialog> {
         return;
       }
 
+      // Lưu danh sách thể loại (dùng thể loại đầu tiên làm category chính, và lưu tất cả vào tags)
+      final categoryNames = _selectedCategories.map((c) => c.name).toList();
+      final mainCategory = categoryNames.first;
+
       final bookData = {
         'title': _titleController.text.trim(),
         'author': _authorController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'category': _selectedCategory!.name,
+        'category': mainCategory, // Thể loại chính (để tương thích với code cũ)
+        'categories': categoryNames, // Danh sách tất cả thể loại
         'coverImageUrl': finalCoverImageUrl,
         'fileUrl': finalFileUrl,
         'format': _selectedFormat.name,
@@ -1058,17 +1074,20 @@ class _BookEditDialogState extends State<_BookEditDialog> {
         await FirebaseFirestore.instance.collection('books').add(bookData);
       }
 
-      // Update book count for categories
+      // Update book count for all selected categories
       final categoryService = CategoryService();
       try {
-        // Update count for new category
-        await categoryService.updateBookCountByName(_selectedCategory!.name);
+        // Update count for all new categories
+        for (final category in _selectedCategories) {
+          await categoryService.updateBookCountByName(category.name);
+        }
 
         // If editing and category changed, update old category count too
-        if (widget.book != null &&
-            oldCategoryName != null &&
-            oldCategoryName != _selectedCategory!.name) {
-          await categoryService.updateBookCountByName(oldCategoryName);
+        if (widget.book != null && oldCategoryName != null) {
+          // Only update old category if it's not in the new list
+          if (!categoryNames.contains(oldCategoryName)) {
+            await categoryService.updateBookCountByName(oldCategoryName);
+          }
         }
       } catch (e) {
         debugPrint('Lỗi cập nhật số lượng sách: $e');
@@ -1149,12 +1168,7 @@ class _BookEditDialogState extends State<_BookEditDialog> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF6C63FF),
-                    const Color(0xFF6C63FF).withOpacity(0.8),
-                  ],
-                ),
+                color: AppColors.primary,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -1165,14 +1179,14 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: AppColors.accent,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       widget.book != null
                           ? Icons.edit
                           : Icons.add_circle_outline,
-                      color: Colors.white,
+                      color: AppColors.primary,
                       size: 28,
                     ),
                   ),
@@ -1183,15 +1197,15 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.accent,
                       ),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: const Icon(Icons.close, color: AppColors.accent),
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundColor: AppColors.accent.withOpacity(0.2),
                     ),
                   ),
                 ],
@@ -1302,7 +1316,7 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                         selectedFile: _selectedCoverImage,
                         existingUrl: _coverImageUrl,
                         onTap: _isUploading ? null : _pickCoverImage,
-                        color: const Color(0xFF6C63FF),
+                        color: AppColors.accent,
                       ),
 
                       const SizedBox(height: 12),
@@ -1313,7 +1327,7 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                         selectedFile: _selectedBookFile,
                         existingUrl: _fileUrl,
                         onTap: _isUploading ? null : _pickBookFile,
-                        color: const Color(0xFFE91E63),
+                        color: AppColors.accent,
                       ),
 
                       if (_isUploading) ...[
@@ -1321,24 +1335,21 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF6C63FF).withOpacity(0.1),
-                                const Color(0xFF6C63FF).withOpacity(0.05),
-                              ],
-                            ),
+                            color: AppColors.primary.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Column(
+                          child: Column(
                             children: [
-                              CircularProgressIndicator(),
+                              CircularProgressIndicator(
+                                color: AppColors.accent,
+                              ),
                               SizedBox(height: 16),
                               Text(
                                 'Đang tải lên...',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF6C63FF),
+                                  color: AppColors.accent,
                                 ),
                               ),
                               SizedBox(height: 8),
@@ -1416,8 +1427,8 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                     child: ElevatedButton(
                       onPressed: _isUploading ? null : _saveBook,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6C63FF),
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.primary,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 14,
@@ -1426,7 +1437,7 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        shadowColor: const Color(0xFF6C63FF).withOpacity(0.3),
+                        shadowColor: AppColors.accent.withOpacity(0.3),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1464,22 +1475,17 @@ class _BookEditDialogState extends State<_BookEditDialog> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                const Color(0xFF6C63FF),
-                const Color(0xFF6C63FF).withOpacity(0.7),
-              ],
-            ),
+            color: AppColors.accent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6C63FF).withOpacity(0.3),
+                color: AppColors.accent.withOpacity(0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: Icon(icon, size: 20, color: Colors.white),
+          child: Icon(icon, size: 20, color: AppColors.primary),
         ),
         const SizedBox(width: 12),
         Text(
@@ -1487,7 +1493,7 @@ class _BookEditDialogState extends State<_BookEditDialog> {
           style: const TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3142),
+            color: AppColors.textPrimary,
             letterSpacing: 0.3,
           ),
         ),
@@ -1520,15 +1526,15 @@ class _BookEditDialogState extends State<_BookEditDialog> {
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF6C63FF)),
+          prefixIcon: Icon(icon, color: AppColors.accent),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 16,
           ),
           labelStyle: TextStyle(color: Colors.grey[600], fontSize: 15),
-          floatingLabelStyle: const TextStyle(
-            color: Color(0xFF6C63FF),
+          floatingLabelStyle: TextStyle(
+            color: AppColors.accent,
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -1536,10 +1542,10 @@ class _BookEditDialogState extends State<_BookEditDialog> {
         maxLines: maxLines,
         keyboardType: keyboardType,
         validator: validator,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
-          color: Color(0xFF2D3142),
+          color: AppColors.textPrimary,
         ),
       ),
     );
@@ -1679,17 +1685,17 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                 height: 40,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _selectedCategory != null
+                  color: _selectedCategories.isNotEmpty
                       ? _getColorFromHex(
-                          _selectedCategory!.color,
+                          _selectedCategories.first.color,
                         ).withOpacity(0.1)
                       : Colors.grey[100],
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   Icons.local_offer_outlined,
-                  color: _selectedCategory != null
-                      ? _getColorFromHex(_selectedCategory!.color)
+                  color: _selectedCategories.isNotEmpty
+                      ? _getColorFromHex(_selectedCategories.first.color)
                       : Colors.grey[600],
                   size: 20,
                 ),
@@ -1713,18 +1719,20 @@ class _BookEditDialogState extends State<_BookEditDialog> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Text(
-                            _selectedCategory != null
-                                ? _selectedCategory!.name
+                            _selectedCategories.isNotEmpty
+                                ? _selectedCategories.length == 1
+                                      ? _selectedCategories.first.name
+                                      : '${_selectedCategories.length} thể loại đã chọn'
                                 : 'Chọn thể loại',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
-                              color: _selectedCategory != null
-                                  ? const Color(0xFF2D3142)
+                              color: _selectedCategories.isNotEmpty
+                                  ? AppColors.textPrimary
                                   : Colors.grey[400],
                             ),
                             overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+                            maxLines: 2,
                           ),
                   ],
                 ),
@@ -1754,231 +1762,318 @@ class _BookEditDialogState extends State<_BookEditDialog> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
           ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF6C63FF),
-                    const Color(0xFF6C63FF).withOpacity(0.8),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.category_outlined,
-                      color: Colors.white,
-                      size: 24,
-                    ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Chọn thể loại',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.category_outlined,
                         color: Colors.white,
+                        size: 24,
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Categories list
-            Flexible(
-              child: _categories.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(40),
+                    const SizedBox(width: 12),
+                    Expanded(
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.category_outlined,
-                            size: 64,
-                            color: Colors.grey[300],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Chưa có thể loại nào',
+                          const Text(
+                            'Chọn thể loại',
                             style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
+                          if (_selectedCategories.isNotEmpty)
+                            Text(
+                              'Đã chọn: ${_selectedCategories.length}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
                         ],
                       ),
-                    )
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _categories.length,
-                      itemBuilder: (context, index) {
-                        final category = _categories[index];
-                        final isSelected = _selectedCategory?.id == category.id;
-                        final categoryColor = _getColorFromHex(category.color);
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? categoryColor.withOpacity(0.1)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected
-                                  ? categoryColor
-                                  : Colors.grey[300]!,
-                              width: isSelected ? 2 : 1.5,
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Categories list
+              Flexible(
+                child: _categories.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.category_outlined,
+                              size: 64,
+                              color: Colors.grey[300],
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: isSelected
-                                    ? categoryColor.withOpacity(0.2)
-                                    : Colors.grey.withOpacity(0.05),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Chưa có thể loại nào',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16,
                               ),
-                            ],
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () async {
-                                _selectedCategory = category;
-                                _categoryController.text = category.name;
-                                Navigator.pop(context);
-                                // Wait a bit before updating state
-                                await Future.delayed(
-                                  const Duration(milliseconds: 100),
-                                );
-                                if (mounted) {
-                                  setState(() {});
-                                }
-                              },
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _categories.length,
+                        itemBuilder: (context, index) {
+                          final category = _categories[index];
+                          final isSelected = _selectedCategories.any(
+                            (c) => c.id == category.id,
+                          );
+                          final categoryColor = _getColorFromHex(
+                            category.color,
+                          );
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? categoryColor.withOpacity(0.1)
+                                  : Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            categoryColor,
-                                            categoryColor.withOpacity(0.7),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: categoryColor.withOpacity(
-                                              0.3,
-                                            ),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.local_offer_rounded,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            category.name,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF2D3142),
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                          ),
-                                          if (category
-                                              .description
-                                              .isNotEmpty) ...[
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              category.description,
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                color: Colors.grey[600],
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                    if (isSelected) ...[
-                                      const SizedBox(width: 8),
+                              border: Border.all(
+                                color: isSelected
+                                    ? categoryColor
+                                    : Colors.grey[300]!,
+                                width: isSelected ? 2 : 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isSelected
+                                      ? categoryColor.withOpacity(0.2)
+                                      : Colors.grey.withOpacity(0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  // Update selected categories
+                                  if (isSelected) {
+                                    // Bỏ chọn nếu đã chọn
+                                    _selectedCategories.removeWhere(
+                                      (c) => c.id == category.id,
+                                    );
+                                  } else {
+                                    // Thêm vào danh sách nếu chưa chọn
+                                    _selectedCategories.add(category);
+                                  }
+
+                                  // Update dialog state to rebuild UI (rebuilds everything inside StatefulBuilder)
+                                  setModalState(() {});
+
+                                  // Update parent state and controller
+                                  setState(() {
+                                    _categoryController.text =
+                                        _selectedCategories
+                                            .map((c) => c.name)
+                                            .join(', ');
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
                                       Container(
-                                        padding: const EdgeInsets.all(8),
+                                        padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
-                                          color: categoryColor,
-                                          shape: BoxShape.circle,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              categoryColor,
+                                              categoryColor.withOpacity(0.7),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: categoryColor.withOpacity(
+                                                0.3,
+                                              ),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
                                         ),
                                         child: const Icon(
-                                          Icons.check,
+                                          Icons.local_offer_rounded,
                                           color: Colors.white,
-                                          size: 16,
+                                          size: 20,
                                         ),
                                       ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              category.name,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                            if (category
+                                                .description
+                                                .isNotEmpty) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                category.description,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: Colors.grey[600],
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? categoryColor
+                                                : Colors.grey[400]!,
+                                            width: 2,
+                                          ),
+                                          color: isSelected
+                                              ? categoryColor
+                                              : Colors.transparent,
+                                        ),
+                                        child: isSelected
+                                            ? const Icon(
+                                                Icons.check,
+                                                color: Colors.white,
+                                                size: 16,
+                                              )
+                                            : null,
+                                      ),
                                     ],
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                          );
+                        },
+                      ),
+              ),
+              // Footer with Done button
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: Colors.grey[200]!, width: 1),
+                  ),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // Update category controller text
+                      _categoryController.text = _selectedCategories
+                          .map((c) => c.name)
+                          .join(', ');
+                      if (mounted) {
+                        setState(() {});
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Builder(
+                      builder: (context) {
+                        // This will be rebuilt by setModalState
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Xong (${_selectedCategories.length})',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         );
                       },
                     ),
-            ),
-          ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

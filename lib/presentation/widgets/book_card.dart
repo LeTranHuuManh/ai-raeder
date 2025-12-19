@@ -13,12 +13,12 @@ class BookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap ??
+      onTap:
+          onTap ??
           () {
-            Navigator.of(context).pushNamed(
-              AppRoutes.bookDetail,
-              arguments: book.id,
-            );
+            Navigator.of(
+              context,
+            ).pushNamed(AppRoutes.bookDetail, arguments: book.id);
           },
       child: Container(
         decoration: BoxDecoration(
@@ -110,82 +110,74 @@ class BookCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          book.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              book.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          book.author,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
+                          const SizedBox(height: 2),
+                          Text(
+                            book.author,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+
+                    const SizedBox(height: 4),
 
                     Row(
                       children: [
                         if (book.rating > 0) ...[
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                size: 14,
-                                color: Colors.amber,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                book.rating.toStringAsFixed(1),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              if (book.reviewCount > 0) ...[
-                                const SizedBox(width: 4),
-                                Text(
-                                  '(${book.reviewCount})',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ],
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 12,
+                            color: Colors.amber,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 2),
+                          Text(
+                            book.rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                         ],
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 6,
+                              vertical: 2,
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               book.category,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 10,
+                                fontSize: 9,
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -204,4 +196,3 @@ class BookCard extends StatelessWidget {
     );
   }
 }
-

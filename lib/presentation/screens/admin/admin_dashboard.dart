@@ -68,7 +68,7 @@ class AdminDashboard extends StatelessWidget {
                 icon: Icons.category,
                 title: 'Quản lý thể loại',
                 subtitle: 'Thêm, sửa, xóa thể loại',
-                color: const Color(0xFFFF6B9D),
+                color: AppColors.secondary,
                 onTap: () {
                   Navigator.of(context).pushNamed(AppRoutes.adminCategories);
                 },

@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: 50),
 
-                // Logo with animated gradient
+                // Logo - XANH VÀNG #D3DA95
                 Center(
                   child: Hero(
                     tag: 'app_logo',
@@ -90,14 +90,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 110,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF6C63FF), Color(0xFF5A52D5)],
+                          colors: [AppColors.primary, AppColors.primaryDark],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF6C63FF).withOpacity(0.4),
+                            color: AppColors.primary.withOpacity(0.4),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Icon(
                         Icons.auto_stories_rounded,
                         size: 56,
-                        color: Colors.white,
+                        color: AppColors.accent,
                       ),
                     ),
                   ),
@@ -114,13 +114,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 40),
 
-                // Title with modern typography
+                // Title
                 const Text(
                   'Chào mừng trở lại! 👋',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3142),
+                    color: AppColors.textPrimary,
                     height: 1.2,
                   ),
                   textAlign: TextAlign.center,
@@ -140,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 40),
 
-                // Email Field with modern design
+                // Email Field
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -168,12 +168,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         margin: const EdgeInsets.all(12),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6C63FF).withOpacity(0.1),
+                          color: AppColors.primary.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
                           Icons.email_rounded,
-                          color: Color(0xFF6C63FF),
+                          color: AppColors.accent,
                           size: 20,
                         ),
                       ),
@@ -204,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 20),
 
-                // Password Field with modern design
+                // Password Field
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -232,12 +232,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         margin: const EdgeInsets.all(12),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6C63FF).withOpacity(0.1),
+                          color: AppColors.primary.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
                           Icons.lock_rounded,
-                          color: Color(0xFF6C63FF),
+                          color: AppColors.accent,
                           size: 20,
                         ),
                       ),
@@ -295,7 +295,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Text(
                       'Quên mật khẩu?',
                       style: TextStyle(
-                        color: Color(0xFF6C63FF),
+                        color: AppColors.accent,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
@@ -305,20 +305,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 24),
 
-                // Login Button with gradient
+                // Login Button - XANH VÀNG #D3DA95
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
                     return Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF6C63FF), Color(0xFF5A52D5)],
+                          colors: [AppColors.primary, AppColors.primaryDark],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF6C63FF).withOpacity(0.4),
+                            color: AppColors.primary.withOpacity(0.4),
                             blurRadius: 12,
                             offset: const Offset(0, 6),
                           ),
@@ -341,7 +341,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
+                                    AppColors.accent,
                                   ),
                                 ),
                               )
@@ -353,14 +353,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                     style: TextStyle(
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: AppColors.accent,
                                       letterSpacing: 0.5,
                                     ),
                                   ),
                                   SizedBox(width: 8),
                                   Icon(
                                     Icons.arrow_forward_rounded,
-                                    color: Colors.white,
+                                    color: AppColors.accent,
                                     size: 22,
                                   ),
                                 ],
@@ -372,7 +372,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 32),
 
-                // Divider with text
+                // Divider
                 Row(
                   children: [
                     Expanded(
@@ -441,7 +441,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF2D3142),
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -472,7 +472,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text(
                         'Đăng ký ngay',
                         style: TextStyle(
-                          color: Color(0xFF6C63FF),
+                          color: AppColors.accent,
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                         ),

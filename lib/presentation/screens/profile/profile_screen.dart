@@ -12,6 +12,8 @@ import 'notification_settings_screen.dart';
 import 'security_settings_screen.dart';
 import 'help_support_screen.dart';
 import 'about_app_screen.dart';
+import 'reading_history_screen.dart';
+import 'bookmarks_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -381,7 +383,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'Xem lại sách đã đọc',
             color: Colors.blue,
             onTap: () {
-              // Navigate to reading history
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ReadingHistoryScreen(),
+                ),
+              );
             },
           ),
           _buildMenuItem(
@@ -390,7 +397,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'Trang đã đánh dấu',
             color: Colors.orange,
             onTap: () {
-              // Navigate to bookmarks
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BookmarksScreen(),
+                ),
+              );
             },
             showDivider: false,
           ),

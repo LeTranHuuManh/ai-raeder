@@ -1198,14 +1198,17 @@ PODS:
     - GoogleUtilities/Environment (~> 8.0)
     - GoogleUtilities/UserDefaults (~> 8.0)
     - PromisesObjC (~> 2.4)
+  - audioplayers_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - BoringSSL-GRPC (0.0.37):
     - BoringSSL-GRPC/Implementation (= 0.0.37)
     - BoringSSL-GRPC/Interface (= 0.0.37)
   - BoringSSL-GRPC/Implementation (0.0.37):
     - BoringSSL-GRPC/Interface (= 0.0.37)
   - BoringSSL-GRPC/Interface (0.0.37)
-  - cloud_firestore (6.0.3):
-    - Firebase/Firestore (= 12.4.0)
+  - cloud_firestore (6.1.1):
+    - Firebase/Firestore (= 12.6.0)
     - firebase_core
     - Flutter
   - DKImagePickerController/Core (4.3.9):
@@ -1242,53 +1245,53 @@ PODS:
   - file_picker (0.0.1):
     - DKImagePickerController/PhotoGallery
     - Flutter
-  - Firebase/Auth (12.4.0):
+  - Firebase/Auth (12.6.0):
     - Firebase/CoreOnly
-    - FirebaseAuth (~> 12.4.0)
-  - Firebase/CoreOnly (12.4.0):
-    - FirebaseCore (~> 12.4.0)
-  - Firebase/Firestore (12.4.0):
+    - FirebaseAuth (~> 12.6.0)
+  - Firebase/CoreOnly (12.6.0):
+    - FirebaseCore (~> 12.6.0)
+  - Firebase/Firestore (12.6.0):
     - Firebase/CoreOnly
-    - FirebaseFirestore (~> 12.4.0)
-  - Firebase/Storage (12.4.0):
+    - FirebaseFirestore (~> 12.6.0)
+  - Firebase/Storage (12.6.0):
     - Firebase/CoreOnly
-    - FirebaseStorage (~> 12.4.0)
-  - firebase_auth (6.1.1):
-    - Firebase/Auth (= 12.4.0)
+    - FirebaseStorage (~> 12.6.0)
+  - firebase_auth (6.1.3):
+    - Firebase/Auth (= 12.6.0)
     - firebase_core
     - Flutter
-  - firebase_core (4.2.0):
-    - Firebase/CoreOnly (= 12.4.0)
+  - firebase_core (4.3.0):
+    - Firebase/CoreOnly (= 12.6.0)
     - Flutter
-  - firebase_storage (13.0.3):
-    - Firebase/Storage (= 12.4.0)
+  - firebase_storage (13.0.5):
+    - Firebase/Storage (= 12.6.0)
     - firebase_core
     - Flutter
-  - FirebaseAppCheckInterop (12.4.0)
-  - FirebaseAuth (12.4.0):
-    - FirebaseAppCheckInterop (~> 12.4.0)
-    - FirebaseAuthInterop (~> 12.4.0)
-    - FirebaseCore (~> 12.4.0)
-    - FirebaseCoreExtension (~> 12.4.0)
+  - FirebaseAppCheckInterop (12.6.0)
+  - FirebaseAuth (12.6.0):
+    - FirebaseAppCheckInterop (~> 12.6.0)
+    - FirebaseAuthInterop (~> 12.6.0)
+    - FirebaseCore (~> 12.6.0)
+    - FirebaseCoreExtension (~> 12.6.0)
     - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
     - GoogleUtilities/Environment (~> 8.1)
     - GTMSessionFetcher/Core (< 6.0, >= 3.4)
     - RecaptchaInterop (~> 101.0)
-  - FirebaseAuthInterop (12.4.0)
-  - FirebaseCore (12.4.0):
-    - FirebaseCoreInternal (~> 12.4.0)
+  - FirebaseAuthInterop (12.6.0)
+  - FirebaseCore (12.6.0):
+    - FirebaseCoreInternal (~> 12.6.0)
     - GoogleUtilities/Environment (~> 8.1)
     - GoogleUtilities/Logger (~> 8.1)
-  - FirebaseCoreExtension (12.4.0):
-    - FirebaseCore (~> 12.4.0)
-  - FirebaseCoreInternal (12.4.0):
+  - FirebaseCoreExtension (12.6.0):
+    - FirebaseCore (~> 12.6.0)
+  - FirebaseCoreInternal (12.6.0):
     - "GoogleUtilities/NSData+zlib (~> 8.1)"
-  - FirebaseFirestore (12.4.0):
-    - FirebaseCore (~> 12.4.0)
-    - FirebaseCoreExtension (~> 12.4.0)
-    - FirebaseFirestoreInternal (~> 12.4.0)
-    - FirebaseSharedSwift (~> 12.4.0)
-  - FirebaseFirestoreInternal (12.4.0):
+  - FirebaseFirestore (12.6.0):
+    - FirebaseCore (~> 12.6.0)
+    - FirebaseCoreExtension (~> 12.6.0)
+    - FirebaseFirestoreInternal (~> 12.6.0)
+    - FirebaseSharedSwift (~> 12.6.0)
+  - FirebaseFirestoreInternal (12.6.0):
     - abseil/algorithm (~> 1.20240722.0)
     - abseil/base (~> 1.20240722.0)
     - abseil/container/flat_hash_map (~> 1.20240722.0)
@@ -1297,23 +1300,21 @@ PODS:
     - abseil/strings/strings (~> 1.20240722.0)
     - abseil/time (~> 1.20240722.0)
     - abseil/types (~> 1.20240722.0)
-    - FirebaseAppCheckInterop (~> 12.4.0)
-    - FirebaseCore (~> 12.4.0)
+    - FirebaseAppCheckInterop (~> 12.6.0)
+    - FirebaseCore (~> 12.6.0)
     - "gRPC-C++ (~> 1.69.0)"
     - gRPC-Core (~> 1.69.0)
     - leveldb-library (~> 1.22)
     - nanopb (~> 3.30910.0)
-  - FirebaseSharedSwift (12.4.0)
-  - FirebaseStorage (12.4.0):
-    - FirebaseAppCheckInterop (~> 12.4.0)
-    - FirebaseAuthInterop (~> 12.4.0)
-    - FirebaseCore (~> 12.4.0)
-    - FirebaseCoreExtension (~> 12.4.0)
+  - FirebaseSharedSwift (12.6.0)
+  - FirebaseStorage (12.6.0):
+    - FirebaseAppCheckInterop (~> 12.6.0)
+    - FirebaseAuthInterop (~> 12.6.0)
+    - FirebaseCore (~> 12.6.0)
+    - FirebaseCoreExtension (~> 12.6.0)
     - GoogleUtilities/Environment (~> 8.1)
     - GTMSessionFetcher/Core (< 6.0, >= 3.4)
   - Flutter (1.0.0)
-  - flutter_pdfview (1.0.2):
-    - Flutter
   - flutter_tts (0.0.1):
     - Flutter
   - google_sign_in_ios (0.0.1):
@@ -1460,11 +1461,13 @@ PODS:
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - pdfx (1.0.0):
+    - Flutter
   - PromisesObjC (2.4.0)
   - RecaptchaInterop (101.0.0)
-  - SDWebImage (5.21.3):
-    - SDWebImage/Core (= 5.21.3)
-  - SDWebImage/Core (5.21.3)
+  - SDWebImage (5.21.5):
+    - SDWebImage/Core (= 5.21.5)
+  - SDWebImage/Core (5.21.5)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -1474,16 +1477,17 @@ PODS:
   - SwiftyGif (5.4.5)
 
 DEPENDENCIES:
+  - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/darwin`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
-  - flutter_pdfview (from `.symlinks/plugins/flutter_pdfview/ios`)
   - flutter_tts (from `.symlinks/plugins/flutter_tts/ios`)
   - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - pdfx (from `.symlinks/plugins/pdfx/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
 
@@ -1520,6 +1524,8 @@ SPEC REPOS:
     - SwiftyGif
 
 EXTERNAL SOURCES:
+  audioplayers_darwin:
+    :path: ".symlinks/plugins/audioplayers_darwin/darwin"
   cloud_firestore:
     :path: ".symlinks/plugins/cloud_firestore/ios"
   file_picker:
@@ -1532,14 +1538,14 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_storage/ios"
   Flutter:
     :path: Flutter
-  flutter_pdfview:
-    :path: ".symlinks/plugins/flutter_pdfview/ios"
   flutter_tts:
     :path: ".symlinks/plugins/flutter_tts/ios"
   google_sign_in_ios:
     :path: ".symlinks/plugins/google_sign_in_ios/darwin"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  pdfx:
+    :path: ".symlinks/plugins/pdfx/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   sqflite_darwin:
@@ -1549,27 +1555,27 @@ SPEC CHECKSUMS:
   abseil: a05cc83bf02079535e17169a73c5be5ba47f714b
   AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
   AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
+  audioplayers_darwin: 4f9ca89d92d3d21cec7ec580e78ca888e5fb68bd
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
-  cloud_firestore: 79014bb3b303d451717ed5fe69fded8a2b2e8dc2
+  cloud_firestore: 45532e0c1fd1f6a5720af8aa0312470c366b73d2
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
   file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
-  Firebase: f07b15ae5a6ec0f93713e30b923d9970d144af3e
-  firebase_auth: c2b8be95d602d4e8a9148fae72333ef78e69cc20
-  firebase_core: 744984dbbed8b3036abf34f0b98d80f130a7e464
-  firebase_storage: 0ba617a05b24aec050395e4d5d3773c0d7518a15
-  FirebaseAppCheckInterop: f734c802f21fe1da0837708f0f9a27218c8a4ed0
-  FirebaseAuth: 4a2aed737c84114a9d9b33d11ae1b147d6b94889
-  FirebaseAuthInterop: 858e6b754966e70740a4370dd1503dfffe6dbb49
-  FirebaseCore: bb595f3114953664e3c1dc032f008a244147cfd3
-  FirebaseCoreExtension: 7e1f7118ee970e001a8013719fb90950ee5e0018
-  FirebaseCoreInternal: d7f5a043c2cd01a08103ab586587c1468047bca6
-  FirebaseFirestore: 2a6183381cf7679b1bb000eb76a8e3178e25dee2
-  FirebaseFirestoreInternal: 6577a27cd5dc3722b900042527f86d4ea1626134
-  FirebaseSharedSwift: 93426a1de92f19e1199fac5295a4f8df16458daa
-  FirebaseStorage: 20d6b56fb8a40ebaa03d6a2889fe33dac64adb73
+  Firebase: a451a7b61536298fd5cbfe3a746fd40443a50679
+  firebase_auth: f547a06ed4933a1da2b9ac8d8c64ae09d113c8e1
+  firebase_core: ba00a168e719694f38960502ceb560285603d073
+  firebase_storage: 90cdab308fdc9e9aedcbe90d62b949cb66d91ce1
+  FirebaseAppCheckInterop: e2178171b4145013c7c1a3cc464d1d446d3a1896
+  FirebaseAuth: 613c463cb43545a7fd2cd99ade09b78ac472c544
+  FirebaseAuthInterop: db06756ef028006d034b6004dc0c37c24f7828d4
+  FirebaseCore: 0e38ad5d62d980a47a64b8e9301ffa311457be04
+  FirebaseCoreExtension: 032fd6f8509e591fda8cb76f6651f20d926b121f
+  FirebaseCoreInternal: 69bf1306a05b8ac43004f6cc1f804bb7b05b229e
+  FirebaseFirestore: 51ce079b9ddcaa481644164eda649d362c2a6396
+  FirebaseFirestoreInternal: 8b1d2b0a1b859b2ddbd63f448c416c5be7367405
+  FirebaseSharedSwift: 79f27fff0addd15c3de19b87fba426f3cc2c964f
+  FirebaseStorage: 550349b1e8f7315834ea08308696e9469d77135d
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_pdfview: 32bf27bda6fd85b9dd2c09628a824df5081246cf
   flutter_tts: b88dbc8655d3dc961bc4a796e4e16a4cc1795833
   google_sign_in_ios: b48bb9af78576358a168361173155596c845f0b9
   GoogleSignIn: ce8c89bb9b37fb624b92e7514cc67335d1e277e4
@@ -1581,13 +1587,14 @@ SPEC CHECKSUMS:
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
+  pdfx: 77f4dddc48361fbb01486fa2bdee4532cbb97ef3
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
-  SDWebImage: 16309af6d214ba3f77a7c6f6fdda888cb313a50a
+  SDWebImage: e9c98383c7572d713c1a0d7dd2783b10599b9838
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
 
-PODFILE CHECKSUM: 53a6aebc29ccee84c41f92f409fc20cd4ca011f1
+PODFILE CHECKSUM: b78fd075dbe24a5f6a2ba196e9358fa836baf232
 
 COCOAPODS: 1.16.2

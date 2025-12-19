@@ -13,8 +13,14 @@ import 'providers/book_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/reading_provider.dart';
 import 'providers/category_provider.dart';
+import 'providers/tts_provider.dart';
 
 void main() async {
+  // Note: DevTools warnings about "ext.flutter.activeDevToolsServerAddress" and
+  // "ext.flutter.connectedVmServiceUri" are harmless and can be safely ignored.
+  // These occur when the IDE tries to connect to DevTools but the VM service
+  // doesn't support those extension methods. They don't affect app functionality.
+  
   WidgetsFlutterBinding.ensureInitialized();
 
   // Load .env file if it exists (optional)
@@ -108,6 +114,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => BookProvider()),
         ChangeNotifierProvider(create: (_) => ReadingProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => TtsProvider()),
       ],
       child: const MyApp(),
     ),

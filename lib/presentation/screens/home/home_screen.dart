@@ -7,6 +7,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/book_provider.dart';
 import '../../../data/models/book_model.dart';
 import '../../widgets/book_card.dart';
+import '../chat/chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -41,7 +42,9 @@ class _HomeScreenState extends State<HomeScreen>
     super.didChangeDependencies();
     // Reset selected index to 0 when returning to home screen
     final route = ModalRoute.of(context);
-    if (route != null && route.isCurrent && route.settings.name == AppRoutes.home) {
+    if (route != null &&
+        route.isCurrent &&
+        route.settings.name == AppRoutes.home) {
       if (_selectedIndex != 0) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
@@ -69,7 +72,9 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     // Ensure selected index is 0 when on home screen
     final route = ModalRoute.of(context);
-    if (route != null && route.isCurrent && route.settings.name == AppRoutes.home) {
+    if (route != null &&
+        route.isCurrent &&
+        route.settings.name == AppRoutes.home) {
       if (_selectedIndex != 0) {
         // Use microtask to avoid setState during build
         Future.microtask(() {
@@ -124,6 +129,17 @@ class _HomeScreenState extends State<HomeScreen>
                 );
               }
               return const SizedBox.shrink();
+            },
+          ),
+          // Chatbot button
+          IconButton(
+            icon: const Icon(Icons.smart_toy_outlined, color: Colors.black87),
+            tooltip: 'AI Assistant',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ChatScreen()),
+              );
             },
           ),
           IconButton(
@@ -185,15 +201,11 @@ class _HomeScreenState extends State<HomeScreen>
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFE8B4F8), Color(0xFF8B7FE8), Color(0xFF6BA8F7)],
-        ),
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.3),
+            color: AppColors.primary.withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -208,10 +220,10 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 Text(
                   greeting,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white70,
+                    color: AppColors.accent.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -220,17 +232,17 @@ class _HomeScreenState extends State<HomeScreen>
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppColors.accent,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Chào mừng trở lại! Hãy tiếp tục hành trình đọc sách của bạn.',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white,
+                    color: AppColors.accent.withOpacity(0.8),
                     height: 1.5,
                   ),
                 ),
@@ -243,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen>
             child: Container(
               height: 120,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: AppColors.accent.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Stack(
@@ -257,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen>
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: AppColors.accent.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -269,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen>
                       width: 25,
                       height: 25,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: AppColors.accent.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -278,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen>
                   Icon(
                     Icons.auto_stories_rounded,
                     size: 70,
-                    color: Colors.white.withOpacity(0.9),
+                    color: AppColors.accent.withOpacity(0.6),
                   ),
                 ],
               ),
@@ -304,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen>
       child: TabBar(
         controller: _tabController,
         isScrollable: true,
-        labelColor: AppColors.primary,
+        labelColor: AppColors.accent,
         unselectedLabelColor: AppColors.textSecondary,
         labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(
@@ -312,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen>
           fontWeight: FontWeight.w500,
         ),
         indicator: UnderlineTabIndicator(
-          borderSide: BorderSide(color: AppColors.primary, width: 3),
+          borderSide: BorderSide(color: AppColors.accent, width: 3),
           insets: const EdgeInsets.symmetric(horizontal: 16),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
