@@ -151,8 +151,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF6C63FF),
-              const Color(0xFF6C63FF).withOpacity(0.8),
+              const Color(0xFFD3DA95),
+              const Color(0xFFD3DA95).withOpacity(0.8),
             ],
           ),
         ),
@@ -220,7 +220,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
                                               color: const Color(
-                                                0xFF6C63FF,
+                                                0xFFD3DA95,
                                               ).withOpacity(0.2),
                                             ),
                                           ),
@@ -234,7 +234,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
                                               color: const Color(
-                                                0xFF6C63FF,
+                                                0xFFD3DA95,
                                               ).withOpacity(0.3),
                                             ),
                                           ),
@@ -248,7 +248,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                             boxShadow: [
                                               BoxShadow(
                                                 color: const Color(
-                                                  0xFF6C63FF,
+                                                  0xFFD3DA95,
                                                 ).withOpacity(0.3),
                                                 blurRadius: 20,
                                                 offset: const Offset(0, 10),
@@ -284,7 +284,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                               decoration: BoxDecoration(
                                                 gradient: const LinearGradient(
                                                   colors: [
-                                                    Color(0xFF6C63FF),
+                                                    Color(0xFFD3DA95),
                                                     Color(0xFF5A52D5),
                                                   ],
                                                 ),
@@ -292,7 +292,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: const Color(
-                                                      0xFF6C63FF,
+                                                      0xFFD3DA95,
                                                     ).withOpacity(0.4),
                                                     blurRadius: 8,
                                                     offset: const Offset(0, 4),
@@ -367,10 +367,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                       gradient: LinearGradient(
                                         colors: [
                                           const Color(
-                                            0xFF6C63FF,
+                                            0xFFD3DA95,
                                           ).withOpacity(0.1),
                                           const Color(
-                                            0xFF6C63FF,
+                                            0xFFD3DA95,
                                           ).withOpacity(0.05),
                                         ],
                                       ),
@@ -382,7 +382,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
                                             color: const Color(
-                                              0xFF6C63FF,
+                                              0xFFD3DA95,
                                             ).withOpacity(0.2),
                                             borderRadius: BorderRadius.circular(
                                               12,
@@ -390,7 +390,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                           ),
                                           child: const Icon(
                                             Icons.info_outline,
-                                            color: Color(0xFF6C63FF),
+                                            color: Color(0xFFD3DA95),
                                             size: 24,
                                           ),
                                         ),
@@ -400,7 +400,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                             'Thông tin cá nhân của bạn sẽ được bảo mật và chỉ hiển thị trong hồ sơ.',
                                             style: TextStyle(
                                               fontSize: 14,
-                                              color: Color(0xFF6C63FF),
+                                              color: Color(0xFFD3DA95),
                                               height: 1.5,
                                             ),
                                           ),
@@ -419,14 +419,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 16,
                                       ),
-                                      backgroundColor: const Color(0xFF6C63FF),
+                                      backgroundColor: const Color(0xFFD3DA95),
                                       foregroundColor: Colors.white,
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                       shadowColor: const Color(
-                                        0xFF6C63FF,
+                                        0xFFD3DA95,
                                       ).withOpacity(0.3),
                                     ),
                                     child: authProvider.isLoading
@@ -467,7 +467,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   Widget _buildSectionLabel(String label, IconData icon) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF6C63FF)),
+        Icon(icon, size: 20, color: const Color(0xFFD3DA95)),
         const SizedBox(width: 8),
         Text(
           label,
@@ -553,7 +553,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         ),
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF6C63FF)),
+          prefixIcon: Icon(icon, color: const Color(0xFFD3DA95)),
           labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
@@ -571,7 +571,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
+            borderSide: const BorderSide(color: Color(0xFFD3DA95), width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),

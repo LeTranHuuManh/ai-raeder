@@ -64,8 +64,8 @@ class _AboutAppScreenState extends State<AboutAppScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF6C63FF),
-              const Color(0xFF6C63FF).withOpacity(0.8),
+              const Color(0xFFD3DA95),
+              const Color(0xFFD3DA95).withOpacity(0.8),
             ],
           ),
         ),
@@ -127,9 +127,9 @@ class _AboutAppScreenState extends State<AboutAppScreen>
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        const Color(0xFF6C63FF),
+                                        const Color(0xFFD3DA95),
                                         const Color(
-                                          0xFF6C63FF,
+                                          0xFFD3DA95,
                                         ).withOpacity(0.7),
                                       ],
                                     ),
@@ -137,7 +137,7 @@ class _AboutAppScreenState extends State<AboutAppScreen>
                                     boxShadow: [
                                       BoxShadow(
                                         color: const Color(
-                                          0xFF6C63FF,
+                                          0xFFD3DA95,
                                         ).withOpacity(0.3),
                                         blurRadius: 20,
                                         offset: const Offset(0, 10),
@@ -170,10 +170,10 @@ class _AboutAppScreenState extends State<AboutAppScreen>
                                     gradient: LinearGradient(
                                       colors: [
                                         const Color(
-                                          0xFF6C63FF,
+                                          0xFFD3DA95,
                                         ).withOpacity(0.1),
                                         const Color(
-                                          0xFF6C63FF,
+                                          0xFFD3DA95,
                                         ).withOpacity(0.05),
                                       ],
                                     ),
@@ -200,8 +200,8 @@ class _AboutAppScreenState extends State<AboutAppScreen>
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  const Color(0xFF6C63FF).withOpacity(0.1),
-                                  const Color(0xFF6C63FF).withOpacity(0.05),
+                                  const Color(0xFFD3DA95).withOpacity(0.1),
+                                  const Color(0xFFD3DA95).withOpacity(0.05),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(20),
@@ -211,7 +211,7 @@ class _AboutAppScreenState extends State<AboutAppScreen>
                                 const Icon(
                                   Icons.auto_stories,
                                   size: 40,
-                                  color: Color(0xFF6C63FF),
+                                  color: Color(0xFFD3DA95),
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
@@ -242,7 +242,7 @@ class _AboutAppScreenState extends State<AboutAppScreen>
                             title: 'Upload sách dễ dàng',
                             description:
                                 'Tải lên và quản lý thư viện sách của bạn',
-                            color: const Color(0xFF6C63FF),
+                            color: const Color(0xFFD3DA95),
                           ),
                           const SizedBox(height: 12),
 
@@ -281,7 +281,7 @@ class _AboutAppScreenState extends State<AboutAppScreen>
                             name: 'Lê Trần Hữu Mạnh',
                             role: 'Lead Developer',
                             avatar: 'A',
-                            color: const Color(0xFF6C63FF),
+                            color: const Color(0xFFD3DA95),
                           ),
                           const SizedBox(height: 12),
 
@@ -444,7 +444,7 @@ class _AboutAppScreenState extends State<AboutAppScreen>
           height: 20,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF6C63FF), Color(0xFF5A52D5)],
+              colors: [Color(0xFFD3DA95), Color(0xFFB8C078)],
             ),
             borderRadius: BorderRadius.circular(2),
           ),
@@ -600,7 +600,7 @@ class _AboutAppScreenState extends State<AboutAppScreen>
         ),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF6C63FF), size: 22),
+            Icon(icon, color: const Color(0xFFD3DA95), size: 22),
             const SizedBox(width: 12),
             Expanded(
               child: Text(

@@ -258,8 +258,8 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF6C63FF),
-              const Color(0xFF6C63FF).withOpacity(0.8),
+              const Color(0xFFD3DA95),
+              const Color(0xFFD3DA95).withOpacity(0.8),
             ],
           ),
         ),
@@ -416,7 +416,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen>
                                     icon: const Icon(Icons.send, size: 18),
                                     label: const Text('Gửi email xác minh'),
                                     style: TextButton.styleFrom(
-                                      foregroundColor: const Color(0xFF6C63FF),
+                                      foregroundColor: const Color(0xFFD3DA95),
                                     ),
                                   ),
                           ),
@@ -427,7 +427,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen>
                           _buildInfoCard(
                             title: 'Email tài khoản',
                             icon: Icons.account_circle_outlined,
-                            color: const Color(0xFF6C63FF),
+                            color: const Color(0xFFD3DA95),
                             status: user?.email ?? 'N/A',
                             statusColor: const Color(0xFF2D3142),
                           ),
@@ -443,7 +443,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen>
                               boxShadow: [
                                 BoxShadow(
                                   color: const Color(
-                                    0xFF6C63FF,
+                                    0xFFD3DA95,
                                   ).withOpacity(0.1),
                                   blurRadius: 20,
                                   offset: const Offset(0, 8),
@@ -461,7 +461,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen>
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
                                           color: const Color(
-                                            0xFF6C63FF,
+                                            0xFFD3DA95,
                                           ).withOpacity(0.2),
                                           borderRadius: BorderRadius.circular(
                                             12,
@@ -469,7 +469,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen>
                                         ),
                                         child: const Icon(
                                           Icons.lock_outlined,
-                                          color: Color(0xFF6C63FF),
+                                          color: Color(0xFFD3DA95),
                                           size: 24,
                                         ),
                                       ),
@@ -558,7 +558,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen>
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 16,
                                       ),
-                                      backgroundColor: const Color(0xFF6C63FF),
+                                      backgroundColor: const Color(0xFFD3DA95),
                                       foregroundColor: Colors.white,
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
@@ -755,7 +755,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen>
         ),
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF6C63FF)),
+          prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFD3DA95)),
           suffixIcon: IconButton(
             icon: Icon(
               obscureText
@@ -782,7 +782,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen>
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
+            borderSide: const BorderSide(color: Color(0xFFD3DA95), width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),

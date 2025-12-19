@@ -32,6 +32,8 @@ dependencies:
   path_provider: ^2.1.3
   shared_preferences: ^2.2.3
   flutter_rating_bar: ^4.0.1
+  flutter_dotenv: ^6.0.0
+  dio: ^5.9.0
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +43,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - .env
     - assets/images/
     - assets/images/icons/
     - assets/data/

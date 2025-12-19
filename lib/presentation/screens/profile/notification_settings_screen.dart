@@ -108,7 +108,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF6C63FF),
+        backgroundColor: const Color(0xFFD3DA95),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
@@ -126,8 +126,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF6C63FF),
-              const Color(0xFF6C63FF).withOpacity(0.8),
+              const Color(0xFFD3DA95),
+              const Color(0xFFD3DA95).withOpacity(0.8),
             ],
           ),
         ),
@@ -193,7 +193,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                           _buildSectionCard(
                             title: 'Thông báo Email',
                             icon: Icons.email_outlined,
-                            color: const Color(0xFF6C63FF),
+                            color: const Color(0xFFD3DA95),
                             children: [
                               _buildSwitchTile(
                                 title: 'Nội dung mới',
@@ -323,8 +323,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  const Color(0xFF6C63FF).withOpacity(0.1),
-                                  const Color(0xFF6C63FF).withOpacity(0.05),
+                                  const Color(0xFFD3DA95).withOpacity(0.1),
+                                  const Color(0xFFD3DA95).withOpacity(0.05),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(16),
@@ -335,13 +335,13 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
                                     color: const Color(
-                                      0xFF6C63FF,
+                                      0xFFD3DA95,
                                     ).withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
                                     Icons.info_outline,
-                                    color: Color(0xFF6C63FF),
+                                    color: Color(0xFFD3DA95),
                                     size: 24,
                                   ),
                                 ),
@@ -351,7 +351,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                                     'Bạn có thể thay đổi cài đặt thông báo bất cứ lúc nào. Các thay đổi sẽ có hiệu lực ngay lập tức.',
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Color(0xFF6C63FF),
+                                      color: Color(0xFFD3DA95),
                                       height: 1.5,
                                     ),
                                   ),
@@ -449,12 +449,12 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       decoration: BoxDecoration(
         color: value
-            ? const Color(0xFF6C63FF).withOpacity(0.05)
+            ? const Color(0xFFD3DA95).withOpacity(0.05)
             : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value
-              ? const Color(0xFF6C63FF).withOpacity(0.3)
+              ? const Color(0xFFD3DA95).withOpacity(0.3)
               : Colors.grey[200]!,
           width: 1,
         ),
@@ -467,7 +467,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             Icon(
               icon,
               size: 20,
-              color: value ? const Color(0xFF6C63FF) : Colors.grey[600],
+              color: value ? const Color(0xFFD3DA95) : Colors.grey[600],
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -493,8 +493,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             ),
           ),
         ),
-        activeColor: const Color(0xFF6C63FF),
-        activeTrackColor: const Color(0xFF6C63FF).withOpacity(0.3),
+        activeColor: const Color(0xFFD3DA95),
+        activeTrackColor: const Color(0xFFD3DA95).withOpacity(0.3),
         inactiveTrackColor: Colors.grey[300],
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),

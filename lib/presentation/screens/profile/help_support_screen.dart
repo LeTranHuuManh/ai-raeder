@@ -58,11 +58,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
     );
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
     _animationController.forward();
   }
 
@@ -90,7 +90,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
               ),
             ],
           ),
-          backgroundColor: const Color(0xFF6C63FF),
+          backgroundColor: const Color(0xFFD3DA95),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 4),
         ),
@@ -107,8 +107,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF6C63FF),
-              const Color(0xFF6C63FF).withOpacity(0.8),
+              const Color(0xFFD3DA95),
+              const Color(0xFFD3DA95).withOpacity(0.8),
             ],
           ),
         ),
@@ -178,8 +178,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  const Color(0xFF6C63FF).withOpacity(0.1),
-                                  const Color(0xFF6C63FF).withOpacity(0.05),
+                                  const Color(0xFFD3DA95).withOpacity(0.1),
+                                  const Color(0xFFD3DA95).withOpacity(0.05),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(20),
@@ -190,14 +190,14 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
                                     color: const Color(
-                                      0xFF6C63FF,
+                                      0xFFD3DA95,
                                     ).withOpacity(0.2),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
                                     Icons.support_agent,
                                     size: 40,
-                                    color: Color(0xFF6C63FF),
+                                    color: Color(0xFFD3DA95),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
@@ -225,7 +225,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                                       child: _buildQuickContactButton(
                                         icon: Icons.email,
                                         label: 'Email',
-                                        color: const Color(0xFF6C63FF),
+                                        color: const Color(0xFFD3DA95),
                                         onTap: () =>
                                             _showContactDialog('email'),
                                       ),
@@ -235,7 +235,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                                       child: _buildQuickContactButton(
                                         icon: Icons.chat_bubble_outline,
                                         label: 'Chat',
-                                        color: const Color(0xFF4CAF50),
+                                        color: const Color(0xFFD3DA95),
                                         onTap: () {
                                           ScaffoldMessenger.of(
                                             context,
@@ -328,7 +328,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                             icon: Icons.menu_book,
                             title: 'Hướng dẫn sử dụng',
                             subtitle: 'Tìm hiểu cách sử dụng ứng dụng',
-                            color: const Color(0xFF6C63FF),
+                            color: const Color(0xFFD3DA95),
                             onTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -372,7 +372,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                             icon: Icons.article,
                             title: 'Blog',
                             subtitle: 'Đọc các bài viết và tin tức mới nhất',
-                            color: const Color(0xFF4CAF50),
+                            color: const Color(0xFFD3DA95),
                             onTap: () => _showContactDialog('blog'),
                           ),
 
@@ -384,8 +384,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  const Color(0xFF6C63FF).withOpacity(0.1),
-                                  const Color(0xFF6C63FF).withOpacity(0.05),
+                                  const Color(0xFFD3DA95).withOpacity(0.1),
+                                  const Color(0xFFD3DA95).withOpacity(0.05),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(16),
@@ -399,13 +399,13 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         color: const Color(
-                                          0xFF6C63FF,
+                                          0xFFD3DA95,
                                         ).withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(
                                         Icons.info_outline,
-                                        color: Color(0xFF6C63FF),
+                                        color: Color(0xFFD3DA95),
                                         size: 20,
                                       ),
                                     ),
@@ -415,7 +415,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF6C63FF),
+                                        color: Color(0xFFD3DA95),
                                       ),
                                     ),
                                   ],
@@ -424,13 +424,13 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                                 _buildContactInfo(
                                   Icons.email,
                                   'Email',
-                                  'support@aireader.com',
+                                  'manhle@gmail.com',
                                 ),
                                 const SizedBox(height: 12),
                                 _buildContactInfo(
                                   Icons.phone,
                                   'Hotline',
-                                  '1900 1234',
+                                  '0935 866 403',
                                 ),
                                 const SizedBox(height: 12),
                                 _buildContactInfo(
@@ -508,10 +508,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF6C63FF).withOpacity(0.1),
+              color: const Color(0xFFD3DA95).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(item.icon, color: const Color(0xFF6C63FF), size: 20),
+            child: Icon(item.icon, color: const Color(0xFFD3DA95), size: 20),
           ),
           title: Text(
             item.question,
@@ -530,7 +530,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF6C63FF).withOpacity(0.05),
+                color: const Color(0xFFD3DA95).withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -613,7 +613,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
   Widget _buildContactInfo(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF6C63FF)),
+        Icon(icon, size: 18, color: const Color(0xFFD3DA95)),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
